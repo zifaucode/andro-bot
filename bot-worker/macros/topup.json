@@ -1,0 +1,199 @@
+{
+  "name": "topup",
+  "description": "Macro untuk melakukan proses topup otomatis di device fisik Android.",
+  "steps": [
+    {
+      "action": "tap",
+      "x": 1146,
+      "y": 667,
+      "label": "1. Klik tombol hadiah kanan bawah"
+    },
+    {
+      "action": "wait",
+      "seconds": 1.5
+    },
+    {
+      "action": "tap",
+      "x": 307,
+      "y": 291,
+      "label": "2. Klik tab hadiah"
+    },
+    {
+      "action": "wait",
+      "seconds": 1.5
+    },
+    {
+      "action": "tap",
+      "x": 577,
+      "y": 173,
+      "label": "3a. Klik kolom input ID player"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "input_text",
+      "text": "$id_player",
+      "label": "3b. Masukkan Text ID Player"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "tap",
+      "x": 1016,
+      "y": 176,
+      "label": "3c. Klik tombol Cari (Tap 1)"
+    },
+    {
+      "action": "wait",
+      "seconds": 0.5
+    },
+    {
+      "action": "tap",
+      "x": 1016,
+      "y": 176,
+      "label": "3d. Klik tombol Cari (Tap 2)"
+    },
+    {
+      "action": "wait",
+      "seconds": 1,
+      "label": "Tunggu banner error muncul (jika ada)"
+    },
+    {
+      "action": "screenshot",
+      "label": "hasil_pencarian_player"
+    },
+    {
+      "action": "check_screen_not",
+      "x": 982,
+      "y": 52,
+      "unexpected_color": "#5A000A",
+      "tolerance": 80,
+      "label": "Cek banner toast error 'Id pemain tidak ada'",
+      "fail_reason": "Id pemain tidak ada",
+      "on_fail": [
+        { "action": "wait", "seconds": 0.5 },
+        { "action": "tap", "x": 1100, "y": 55, "label": "Tutup X popup" },
+        { "action": "wait", "seconds": 1 }
+      ]
+    },
+    {
+      "action": "wait",
+      "seconds": 3,
+      "label": "Tunggu hasil pencarian selesai loading"
+    },
+    {
+      "action": "tap",
+      "x": 1030,
+      "y": 274,
+      "label": "4. Klik icon hadiah hasil pencarian"
+    },
+    {
+      "action": "wait",
+      "seconds": 1.5
+    },
+    {
+      "action": "tap",
+      "x": 850,
+      "y": 350,
+      "label": "5. Klik tombol B"
+    },
+    {
+      "action": "wait",
+      "seconds": 1.5
+    },
+    {
+      "action": "tap",
+      "x": 652,
+      "y": 350,
+      "label": "5a. Klik kolom input jumlah coin"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "input_text",
+      "text": "$amount",
+      "label": "5b. Masukkan Text Jumlah Coin"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "press_key",
+      "keycode": 66,
+      "label": "Tekan ENTER"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "screenshot",
+      "label": "sebelum_klik_tentukan_dengan_amount"
+    },
+    {
+      "action": "tap",
+      "x": 682,
+      "y": 521,
+      "label": "6a. Klik tombol Tentukan (Tap 1)"
+    },
+    {
+      "action": "wait",
+      "seconds": 0.5
+    },
+    {
+      "action": "tap",
+      "x": 682,
+      "y": 521,
+      "label": "6b. Klik tombol Tentukan (Tap 2)"
+    },
+    {
+      "action": "tap",
+      "x": 682,
+      "y": 590,
+      "label": "6c. Klik tombol Tentukan (Tap 3)"
+    },
+    {
+      "action": "wait",
+      "seconds": 2
+    },
+    {
+      "action": "screenshot",
+      "label": "setelah_klik_tentukan"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "tap",
+      "x": 307,
+      "y": 400,
+      "label": "7. Klik tab catatan"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    },
+    {
+      "action": "screenshot",
+      "label": "setelah_klik_catatan"
+    },
+    {
+      "action": "tap",
+      "x": 1100,
+      "y": 55,
+      "label": "Tutup X popup"
+    },
+    {
+      "action": "wait",
+      "seconds": 1
+    }
+  ]
+}

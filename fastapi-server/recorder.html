@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Macro Recorder — BOT-ANDRO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --surface: #111827;
+      --surface2: #1a2235;
+      --border: #1f2d45;
+      --accent: #6366f1;
+      --accent2: #8b5cf6;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1a1040 0%, #0f172a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .header-logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .header h1 { font-size: 18px; font-weight: 700; }
+    .header h1 span { color: var(--accent); }
+    .header-nav { margin-left: auto; display: flex; gap: 8px; }
+    .btn-nav {
+      padding: 7px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; text-decoration: none; display: inline-flex;
+      align-items: center; gap: 6px; transition: all .2s;
+    }
+    .btn-nav.secondary { background: var(--surface2); color: var(--muted); }
+    .btn-nav.secondary:hover { color: var(--text); background: var(--border); }
+
+    /* ── Layout ── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    /* ── LEFT: Screen Panel ── */
+    .screen-panel {
+      display: flex; flex-direction: column;
+      padding: 16px;
+      gap: 12px;
+      overflow: hidden;
+      border-right: 1px solid var(--border);
+    }
+    .screen-toolbar {
+      display: flex; gap: 8px; align-items: center; flex-shrink: 0;
+    }
+    .btn {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; border: none; transition: all .2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #4f46e5; transform: translateY(-1px); }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: var(--red); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-warn { background: var(--yellow); color: #000; }
+    .btn-warn:hover { background: #d97706; }
+    .btn:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+    .screen-mode-badge {
+      margin-left: auto;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(99,102,241,.15);
+      color: var(--accent);
+      border: 1px solid rgba(99,102,241,.3);
+    }
+    .screen-mode-badge.swipe-mode {
+      background: rgba(16,185,129,.15);
+      color: var(--green);
+      border-color: rgba(16,185,129,.3);
+    }
+
+    .screen-wrap {
+      flex: 1;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 2px solid var(--border);
+      position: relative;
+      background: #000;
+      cursor: crosshair;
+      transition: border-color .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .screen-wrap.swipe-mode { border-color: var(--green) !important; }
+    .screen-wrap:hover { border-color: rgba(99,102,241,.5); }
+
+    #screen-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+    .screen-placeholder {
+      text-align: center;
+      color: var(--muted);
+    }
+    .screen-placeholder i { font-size: 48px; margin-bottom: 12px; opacity: .3; }
+    .screen-placeholder p { font-size: 14px; }
+
+    /* Tap indicator */
+    .tap-indicator {
+      position: absolute;
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0);
+      transition: transform .15s;
+      background: rgba(99,102,241,.2);
+    }
+    .tap-indicator.pop {
+      animation: tapPop .4s forwards;
+    }
+    @keyframes tapPop {
+      0% { transform: translate(-50%,-50%) scale(0); opacity: 1; }
+      50% { transform: translate(-50%,-50%) scale(1.5); opacity: .8; }
+      100% { transform: translate(-50%,-50%) scale(2); opacity: 0; }
+    }
+
+    /* Swipe line */
+    .swipe-line {
+      position: absolute;
+      pointer-events: none;
+      stroke: var(--green);
+      stroke-width: 3;
+      fill: none;
+    }
+    .swipe-start-dot {
+      position: absolute;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--green);
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 12px var(--green);
+    }
+
+    /* ── RIGHT: Builder Panel ── */
+    .builder-panel {
+      display: flex; flex-direction: column;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .builder-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .tab {
+      flex: 1; padding: 12px;
+      text-align: center;
+      font-size: 12px; font-weight: 600;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all .2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-content { display: none; flex: 1; overflow-y: auto; padding: 16px; }
+    .tab-content.active { display: flex; flex-direction: column; gap: 12px; }
+
+    /* ── Macro Meta ── */
+    .field-group { display: flex; flex-direction: column; gap: 6px; }
+    .field-label { font-size: 12px; color: var(--muted); font-weight: 500; }
+    .field-input {
+      padding: 8px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+      transition: border-color .2s;
+    }
+    .field-input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Quick Actions ── */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .qa-btn {
+      padding: 10px 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 4px;
+      transition: all .2s;
+    }
+    .qa-btn i { font-size: 16px; }
+    .qa-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(99,102,241,.1); }
+    .qa-btn.active { border-color: var(--green); color: var(--green); background: rgba(16,185,129,.1); }
+
+    /* ── Step Form ── */
+    #step-form-area {
+      background: var(--surface2);
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+    #step-form-area h4 {
+      font-size: 13px; font-weight: 600; margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .form-row.single { grid-template-columns: 1fr; }
+    .form-add-btn {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    /* ── Steps List ── */
+    .steps-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .steps-header h3 { font-size: 13px; font-weight: 600; }
+    .step-count { font-size: 12px; color: var(--muted); padding: 3px 8px; background: var(--surface2); border-radius: 20px; }
+    .steps-list { display: flex; flex-direction: column; gap: 6px; }
+    .step-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: border-color .15s;
+      cursor: default;
+    }
+    .step-item:hover { border-color: var(--accent); }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 6px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step-info { flex: 1; min-width: 0; }
+    .step-action {
+      font-size: 12px; font-weight: 600; color: var(--cyan);
+      text-transform: uppercase; letter-spacing: .5px;
+    }
+    .step-detail { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .step-label-badge {
+      font-size: 11px;
+      color: var(--yellow);
+      margin-top: 2px;
+      italic;
+    }
+    .step-actions { display: flex; gap: 4px; flex-shrink: 0; }
+    .step-btn {
+      width: 26px; height: 26px;
+      border-radius: 6px;
+      border: none;
+      background: var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      transition: all .15s;
+    }
+    .step-btn:hover.del { background: rgba(239,68,68,.2); color: var(--red); }
+    .step-btn:hover.up, .step-btn:hover.down { background: rgba(99,102,241,.2); color: var(--accent); }
+    .steps-empty {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .steps-empty i { font-size: 32px; margin-bottom: 8px; opacity: .3; display: block; }
+
+    /* ── JSON Preview ── */
+    .json-preview {
+      background: var(--surface2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #a5f3fc;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 200px;
+      line-height: 1.6;
+    }
+
+    /* ── Save bar ── */
+    .save-bar {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+
+    /* ── Toast notifications ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex; align-items: center; gap: 8px;
+      animation: slideIn .3s ease;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5);
+      max-width: 300px;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast.success { background: rgba(16,185,129,.9); color: #fff; }
+    .toast.error { background: rgba(239,68,68,.9); color: #fff; }
+    .toast.info { background: rgba(99,102,241,.9); color: #fff; }
+
+    /* ── Loading overlay ── */
+    .loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius);
+      z-index: 10;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(99,102,241,.3);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive ── */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
+      .screen-panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo"><i class="fa-solid fa-circle-dot"></i></div>
+  <h1>BOT-ANDRO <span>Recorder</span></h1>
+  <div class="header-nav">
+    <a href="/dashboard" class="btn-nav secondary"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- ═══════════ LEFT: LIVE SCREEN ═══════════ -->
+  <div class="screen-panel">
+    <div class="screen-toolbar">
+      <button class="btn btn-primary" id="btn-refresh" onclick="refreshScreen()">
+        <i class="fa-solid fa-rotate"></i> Refresh
+      </button>
+      <button class="btn btn-ghost" id="btn-tap-mode" onclick="setMode('tap')">
+        <i class="fa-solid fa-hand-pointer"></i> Tap Mode
+      </button>
+      <button class="btn btn-ghost" id="btn-swipe-mode" onclick="setMode('swipe')">
+        <i class="fa-solid fa-hand"></i> Swipe Mode
+      </button>
+      <button class="btn btn-ghost" onclick="addWait()">
+        <i class="fa-solid fa-clock"></i> Wait
+      </button>
+      <div class="screen-mode-badge" id="mode-badge">
+        <i class="fa-solid fa-hand-pointer"></i> TAP MODE
+      </div>
+    </div>
+
+    <div class="screen-wrap" id="screen-wrap" onclick="handleScreenClick(event)" onmousedown="handleSwipeStart(event)" onmousemove="handleSwipeMove(event)" onmouseup="handleSwipeEnd(event)">
+      <div class="tap-indicator" id="tap-indicator"></div>
+      <svg id="swipe-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+        <defs>
+          <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#10b981"/>
+          </marker>
+        </defs>
+        <line id="swipe-line" x1="0" y1="0" x2="0" y2="0" stroke="#10b981" stroke-width="3" stroke-dasharray="6,3" marker-end="url(#arrowhead)" style="display:none"/>
+      </svg>
+      <div class="swipe-start-dot" id="swipe-dot" style="display:none"></div>
+
+      <div class="screen-placeholder" id="screen-placeholder">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <p>Klik tombol <strong>Refresh</strong><br>untuk ambil screenshot device</p>
+      </div>
+      <img id="screen-img" style="display:none;" alt="Device Screen" draggable="false"/>
+      <div class="loading-overlay" id="screen-loading" style="display:none">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <!-- Info koordinat -->
+    <div style="display:flex; gap:16px; font-size:12px; color:var(--muted); padding: 0 4px;">
+      <span id="coord-info">Resolusi: — &nbsp;|&nbsp; Klik screenshot untuk add tap step</span>
+      <span id="last-tap" style="margin-left:auto;"></span>
+    </div>
+  </div>
+
+  <!-- ═══════════ RIGHT: BUILDER ═══════════ -->
+  <div class="builder-panel">
+    <div class="builder-tabs">
+      <div class="tab active" onclick="switchTab('steps')"><i class="fa-solid fa-list-ol"></i> Steps</div>
+      <div class="tab" onclick="switchTab('actions')"><i class="fa-solid fa-bolt"></i> Actions</div>
+      <div class="tab" onclick="switchTab('json')"><i class="fa-solid fa-code"></i> JSON</div>
+    </div>
+
+    <!-- TAB: Steps -->
+    <div class="tab-content active" id="tab-steps">
+      <div class="field-group">
+        <label class="field-label">Nama Macro</label>
+        <input class="field-input" id="macro-name" placeholder="contoh: topup" value="macro_baru"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Deskripsi</label>
+        <input class="field-input" id="macro-desc" placeholder="Deskripsi macro ini..."/>
+      </div>
+      <div class="steps-header">
+        <h3><i class="fa-solid fa-list-ol" style="color:var(--accent)"></i> Step List</h3>
+        <span class="step-count" id="step-count-badge">0 steps</span>
+      </div>
+      <div class="steps-list" id="steps-list">
+        <div class="steps-empty">
+          <i class="fa-regular fa-hand-point-up"></i>
+          Klik screenshot untuk tambah<br>step tap, atau gunakan Actions
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: Actions -->
+    <div class="tab-content" id="tab-actions">
+      <div class="quick-actions-grid">
+        <button class="qa-btn" onclick="showForm('wait')">
+          <i class="fa-solid fa-clock" style="color:var(--yellow)"></i> Wait
+        </button>
+        <button class="qa-btn" onclick="showForm('swipe')">
+          <i class="fa-solid fa-hand" style="color:var(--cyan)"></i> Swipe
+        </button>
+        <button class="qa-btn" onclick="showForm('input_text')">
+          <i class="fa-solid fa-keyboard" style="color:var(--pink)"></i> Input Text
+        </button>
+        <button class="qa-btn" onclick="addKeyAction('key_back')">
+          <i class="fa-solid fa-arrow-left" style="color:var(--muted)"></i> BACK
+        </button>
+        <button class="qa-btn" onclick="addKeyAction('key_home')">
+          <i class="fa-solid fa-house" style="color:var(--muted)"></i> HOME
+        </button>
+        <button class="qa-btn" onclick="addKeyAction('screenshot')">
+          <i class="fa-solid fa-camera" style="color:var(--green)"></i> Screenshot
+        </button>
+        <button class="qa-btn" onclick="showForm('launch_app')">
+          <i class="fa-solid fa-rocket" style="color:var(--accent)"></i> Launch App
+        </button>
+        <button class="qa-btn" onclick="showForm('press_key')">
+          <i class="fa-solid fa-hashtag" style="color:var(--muted)"></i> Keycode
+        </button>
+        <button class="qa-btn" onclick="showForm('check_screen')">
+          <i class="fa-solid fa-eye" style="color:var(--yellow)"></i> Check Screen
+        </button>
+      </div>
+
+      <!-- Dynamic Form -->
+      <div id="step-form-area" style="display:none">
+        <h4 id="form-title">Tambah Step</h4>
+        <div id="form-body"></div>
+        <button class="btn btn-primary form-add-btn" onclick="addFromForm()">
+          <i class="fa-solid fa-plus"></i> Tambah ke Macro
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB: JSON -->
+    <div class="tab-content" id="tab-json">
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <button class="btn btn-ghost" onclick="updateJsonPreview()" style="flex:1">
+          <i class="fa-solid fa-rotate"></i> Refresh JSON
+        </button>
+        <button class="btn btn-ghost" onclick="copyJson()" style="flex:1">
+          <i class="fa-solid fa-copy"></i> Copy
+        </button>
+      </div>
+      <div class="json-preview" id="json-preview">// Klik "Refresh JSON" untuk preview</div>
+    </div>
+
+    <!-- Save Bar -->
+    <div class="save-bar">
+      <button class="btn btn-ghost" onclick="clearAll()" style="flex:0 0 auto">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+      <button class="btn btn-warn" onclick="testMacro()" style="flex:1">
+        <i class="fa-solid fa-play"></i> Test Run
+      </button>
+      <button class="btn btn-success" onclick="saveMacro()" style="flex:1">
+        <i class="fa-solid fa-floppy-disk"></i> Simpan Macro
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════
+let steps = [];
+let mode = 'tap'; // 'tap' | 'swipe'
+let deviceW = 1080, deviceH = 1920;
+let currentFormAction = null;
+
+// Swipe state
+let swipeStarting = false, swiping = false;
+let swipeStartX = 0, swipeStartY = 0;
+let swipeStartDevX = 0, swipeStartDevY = 0;
+let swipeStartTime = 0;
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+window.addEventListener('load', async () => {
+  await loadDeviceInfo();
+});
+
+async function loadDeviceInfo() {
+  try {
+    const res = await fetch('/api/device-info');
+    const d = await res.json();
+    if (d.success) {
+      deviceW = d.width;
+      deviceH = d.height;
+    }
+    document.getElementById('coord-info').textContent =
+      `Resolusi: ${deviceW}×${deviceH}  |  Klik screenshot untuk tambah tap step`;
+  } catch(e) { /* ignore */ }
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREENSHOT
+// ═══════════════════════════════════════════════════════════
+async function refreshScreen() {
+  const btn = document.getElementById('btn-refresh');
+  const loading = document.getElementById('screen-loading');
+  const wrap = document.getElementById('screen-wrap');
+  const placeholder = document.getElementById('screen-placeholder');
+  const img = document.getElementById('screen-img');
+
+  btn.disabled = true;
+  loading.style.display = 'flex';
+
+  try {
+    const url = `/api/screenshot?t=${Date.now()}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Screenshot gagal: ' + res.status);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    img.onload = () => {
+      placeholder.style.display = 'none';
+      img.style.display = 'block';
+      loading.style.display = 'none';
+      btn.disabled = false;
+    };
+    img.src = objectUrl;
+
+    await loadDeviceInfo();
+    toast('Screenshot diperbarui', 'success');
+  } catch(e) {
+    loading.style.display = 'none';
+    btn.disabled = false;
+    toast('Gagal ambil screenshot: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════════════════════════
+function setMode(m) {
+  mode = m;
+  const badge = document.getElementById('mode-badge');
+  const wrap = document.getElementById('screen-wrap');
+  const tapBtn = document.getElementById('btn-tap-mode');
+  const swipeBtn = document.getElementById('btn-swipe-mode');
+
+  if (m === 'tap') {
+    badge.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> TAP MODE';
+    badge.className = 'screen-mode-badge';
+    wrap.className = 'screen-wrap';
+    tapBtn.className = 'btn btn-primary';
+    swipeBtn.className = 'btn btn-ghost';
+  } else {
+    badge.innerHTML = '<i class="fa-solid fa-hand"></i> SWIPE MODE';
+    badge.className = 'screen-mode-badge swipe-mode';
+    wrap.className = 'screen-wrap swipe-mode';
+    tapBtn.className = 'btn btn-ghost';
+    swipeBtn.className = 'btn btn-success';
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// COORDINATE MAPPING
+// ═══════════════════════════════════════════════════════════
+function getDeviceCoords(event) {
+  const img = document.getElementById('screen-img');
+  if (img.style.display === 'none') return null;
+
+  // Dapatkan rendered size img dalam container
+  const wrap = document.getElementById('screen-wrap');
+  const wrapRect = wrap.getBoundingClientRect();
+
+  // Img displayed size (object-fit: contain)
+  const imgNatW = img.naturalWidth || deviceW;
+  const imgNatH = img.naturalHeight || deviceH;
+  const aspect = imgNatW / imgNatH;
+  const wrapAspect = wrapRect.width / wrapRect.height;
+
+  let dispW, dispH, offX, offY;
+  if (aspect > wrapAspect) {
+    dispW = wrapRect.width;
+    dispH = wrapRect.width / aspect;
+    offX = 0;
+    offY = (wrapRect.height - dispH) / 2;
+  } else {
+    dispH = wrapRect.height;
+    dispW = wrapRect.height * aspect;
+    offY = 0;
+    offX = (wrapRect.width - dispW) / 2;
+  }
+
+  const relX = event.clientX - wrapRect.left - offX;
+  const relY = event.clientY - wrapRect.top - offY;
+
+  // Out of bounds check
+  if (relX < 0 || relY < 0 || relX > dispW || relY > dispH) return null;
+
+  // Scale to device resolution
+  const devX = Math.round((relX / dispW) * deviceW);
+  const devY = Math.round((relY / dispH) * deviceH);
+
+  return { devX, devY, dispX: relX + offX, dispY: relY + offY };
+}
+
+// ═══════════════════════════════════════════════════════════
+// TAP HANDLER
+// ═══════════════════════════════════════════════════════════
+function handleScreenClick(event) {
+  if (mode !== 'tap') return;
+  if (document.getElementById('screen-img').style.display === 'none') {
+    toast('Refresh screenshot dulu!', 'info');
+    return;
+  }
+
+  const coords = getDeviceCoords(event);
+  if (!coords) return;
+
+  const {devX, devY, dispX, dispY} = coords;
+
+  // Visual indicator
+  showTapIndicator(dispX, dispY);
+
+  // Add step
+  const label = prompt(`Tap di (${devX}, ${devY})\nMasukkan label (opsional):`, `Tap (${devX},${devY})`);
+  if (label === null) return; // cancelled
+
+  addStep({
+    action: 'tap',
+    x: devX,
+    y: devY,
+    label: label || `Tap (${devX},${devY})`,
+  });
+
+  document.getElementById('last-tap').textContent = `Last tap: (${devX}, ${devY})`;
+  switchTab('steps');
+}
+
+function showTapIndicator(x, y) {
+  const ind = document.getElementById('tap-indicator');
+  const wrap = document.getElementById('screen-wrap');
+  const rect = wrap.getBoundingClientRect();
+
+  ind.style.left = x + 'px';
+  ind.style.top = y + 'px';
+  ind.className = 'tap-indicator';
+  void ind.offsetWidth;
+  ind.className = 'tap-indicator pop';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SWIPE HANDLER
+// ═══════════════════════════════════════════════════════════
+function handleSwipeStart(event) {
+  if (mode !== 'swipe') return;
+  if (document.getElementById('screen-img').style.display === 'none') return;
+  const coords = getDeviceCoords(event);
+  if (!coords) return;
+
+  swipeStarting = true;
+  swipeStartDevX = coords.devX;
+  swipeStartDevY = coords.devY;
+  swipeStartX = coords.dispX;
+  swipeStartY = coords.dispY;
+  swipeStartTime = Date.now();
+
+  const dot = document.getElementById('swipe-dot');
+  dot.style.left = swipeStartX + 'px';
+  dot.style.top = swipeStartY + 'px';
+  dot.style.display = 'block';
+
+  const line = document.getElementById('swipe-line');
+  line.setAttribute('x1', swipeStartX);
+  line.setAttribute('y1', swipeStartY);
+  line.setAttribute('x2', swipeStartX);
+  line.setAttribute('y2', swipeStartY);
+  line.style.display = 'block';
+}
+
+function handleSwipeMove(event) {
+  if (!swipeStarting && !swiping) return;
+  if (mode !== 'swipe') return;
+  const coords = getDeviceCoords(event);
+  if (!coords) return;
+
+  swiping = true;
+  const line = document.getElementById('swipe-line');
+  line.setAttribute('x2', coords.dispX);
+  line.setAttribute('y2', coords.dispY);
+}
+
+function handleSwipeEnd(event) {
+  if (!swiping && !swipeStarting) return;
+  if (mode !== 'swipe') return;
+
+  const dot = document.getElementById('swipe-dot');
+  const line = document.getElementById('swipe-line');
+  dot.style.display = 'none';
+  line.style.display = 'none';
+  swipeStarting = false;
+
+  if (!swiping) { swiping = false; return; }
+  swiping = false;
+
+  const coords = getDeviceCoords(event);
+  if (!coords) return;
+
+  const dur = Math.max(200, Math.min(2000, Date.now() - swipeStartTime));
+  const label = prompt(
+    `Swipe dari (${swipeStartDevX},${swipeStartDevY}) ke (${coords.devX},${coords.devY})\nLabel (opsional):`,
+    `Swipe ${swipeStartDevX},${swipeStartDevY}→${coords.devX},${coords.devY}`
+  );
+  if (label === null) return;
+
+  addStep({
+    action: 'swipe',
+    x1: swipeStartDevX, y1: swipeStartDevY,
+    x2: coords.devX, y2: coords.devY,
+    duration_ms: dur,
+    label: label || `Swipe`,
+  });
+  switchTab('steps');
+}
+
+// ═══════════════════════════════════════════════════════════
+// QUICK ACTIONS
+// ═══════════════════════════════════════════════════════════
+function addWait() {
+  const sec = prompt('Durasi wait (detik):', '1');
+  if (sec === null) return;
+  addStep({ action: 'wait', seconds: parseFloat(sec) || 1, label: `Wait ${sec}s` });
+  switchTab('steps');
+}
+
+function addKeyAction(action) {
+  addStep({ action, label: action.replace('_', ' ').toUpperCase() });
+  switchTab('steps');
+  toast(`Step ${action} ditambahkan`, 'success');
+}
+
+// ═══════════════════════════════════════════════════════════
+// DYNAMIC FORM
+// ═══════════════════════════════════════════════════════════
+const formConfig = {
+  wait: {
+    title: 'Wait (Jeda)',
+    fields: [
+      { id: 'f_seconds', label: 'Durasi (detik)', type: 'number', default: '1', step: '0.5' },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Wait', span: 2 },
+    ],
+    build: () => ({ action:'wait', seconds: parseFloat(v('f_seconds')||1), label: v('f_label') }),
+  },
+  swipe: {
+    title: 'Swipe',
+    fields: [
+      { id: 'f_x1', label: 'X1 (start)', type: 'number', default: '540' },
+      { id: 'f_y1', label: 'Y1 (start)', type: 'number', default: '800' },
+      { id: 'f_x2', label: 'X2 (end)', type: 'number', default: '540' },
+      { id: 'f_y2', label: 'Y2 (end)', type: 'number', default: '200' },
+      { id: 'f_dur', label: 'Durasi (ms)', type: 'number', default: '500' },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Swipe' },
+    ],
+    build: () => ({ action:'swipe', x1:int('f_x1'), y1:int('f_y1'), x2:int('f_x2'), y2:int('f_y2'), duration_ms:int('f_dur'), label:v('f_label') }),
+  },
+  input_text: {
+    title: 'Input Text',
+    fields: [
+      { id: 'f_text', label: 'Text (gunakan $variable untuk dynamic)', type: 'text', default: '', span: 2 },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Input text', span: 2 },
+    ],
+    build: () => ({ action:'input_text', text: v('f_text'), label: v('f_label') }),
+  },
+  launch_app: {
+    title: 'Launch App',
+    fields: [
+      { id: 'f_pkg', label: 'Package Name', type: 'text', default: 'com.example.app', span: 2 },
+      { id: 'f_act', label: 'Activity (opsional)', type: 'text', default: '', span: 2 },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Buka App', span: 2 },
+    ],
+    build: () => { const s = { action:'launch_app', package: v('f_pkg'), label: v('f_label') }; if(v('f_act')) s.activity=v('f_act'); return s; },
+  },
+  press_key: {
+    title: 'Press Keycode',
+    fields: [
+      { id: 'f_keycode', label: 'Keycode (3=HOME, 4=BACK, 66=ENTER)', type: 'number', default: '66' },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Press Key' },
+    ],
+    build: () => ({ action:'press_key', keycode: int('f_keycode'), label: v('f_label') }),
+  },
+  check_screen: {
+    title: 'Check Screen Color',
+    fields: [
+      { id: 'f_x', label: 'X pixel', type: 'number', default: '500' },
+      { id: 'f_y', label: 'Y pixel', type: 'number', default: '500' },
+      { id: 'f_color', label: 'Expected Color (#RRGGBB)', type: 'text', default: '#FFFFFF' },
+      { id: 'f_tol', label: 'Tolerance (0-255)', type: 'number', default: '50' },
+      { id: 'f_fail', label: 'Fail Reason', type: 'text', default: 'Kondisi tidak sesuai', span: 2 },
+      { id: 'f_label', label: 'Label', type: 'text', default: 'Check Screen', span: 2 },
+    ],
+    build: () => ({ action:'check_screen', x:int('f_x'), y:int('f_y'), expected_color:v('f_color'), tolerance:int('f_tol'), fail_reason:v('f_fail'), label:v('f_label'), on_fail:[] }),
+  },
+};
+
+const v = (id) => document.getElementById(id)?.value || '';
+const int = (id) => parseInt(v(id)) || 0;
+
+function showForm(action) {
+  const cfg = formConfig[action];
+  if (!cfg) return;
+  currentFormAction = action;
+
+  const area = document.getElementById('step-form-area');
+  document.getElementById('form-title').textContent = cfg.title;
+
+  let html = '';
+  let row = [];
+  cfg.fields.forEach((f, i) => {
+    const spanClass = f.span === 2 ? 'single' : '';
+    if (f.span === 2) {
+      if (row.length > 0) { html += `<div class="form-row">${row.join('')}</div>`; row = []; }
+      html += `<div class="form-row single"><div class="field-group">
+        <label class="field-label">${f.label}</label>
+        <input class="field-input" id="${f.id}" type="${f.type}" value="${f.default}" ${f.step?'step='+f.step:''}/>
+      </div></div>`;
+    } else {
+      row.push(`<div class="field-group">
+        <label class="field-label">${f.label}</label>
+        <input class="field-input" id="${f.id}" type="${f.type}" value="${f.default}" ${f.step?'step='+f.step:''}/>
+      </div>`);
+      if (row.length === 2 || i === cfg.fields.length - 1) {
+        html += `<div class="form-row">${row.join('')}</div>`;
+        row = [];
+      }
+    }
+  });
+
+  document.getElementById('form-body').innerHTML = html;
+  area.style.display = 'block';
+  switchTab('actions');
+}
+
+function addFromForm() {
+  if (!currentFormAction) return;
+  const cfg = formConfig[currentFormAction];
+  if (!cfg) return;
+  try {
+    const step = cfg.build();
+    addStep(step);
+    document.getElementById('step-form-area').style.display = 'none';
+    currentFormAction = null;
+    switchTab('steps');
+    toast(`Step "${step.action}" ditambahkan!`, 'success');
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// STEP MANAGEMENT
+// ═══════════════════════════════════════════════════════════
+function addStep(step) {
+  steps.push(step);
+  renderSteps();
+}
+
+function removeStep(i) {
+  steps.splice(i, 1);
+  renderSteps();
+}
+
+function moveStep(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= steps.length) return;
+  [steps[i], steps[j]] = [steps[j], steps[i]];
+  renderSteps();
+}
+
+function renderSteps() {
+  const list = document.getElementById('steps-list');
+  const badge = document.getElementById('step-count-badge');
+  badge.textContent = `${steps.length} step${steps.length !== 1 ? 's' : ''}`;
+
+  if (steps.length === 0) {
+    list.innerHTML = `<div class="steps-empty"><i class="fa-regular fa-hand-point-up"></i>Klik screenshot untuk tambah<br>step tap, atau gunakan Actions</div>`;
+    return;
+  }
+
+  const actionColors = {
+    tap: '#06b6d4', swipe: '#10b981', input_text: '#ec4899', wait: '#f59e0b',
+    key_back: '#64748b', key_home: '#64748b', launch_app: '#6366f1',
+    screenshot: '#10b981', press_key: '#94a3b8', check_screen: '#f59e0b',
+    check_screen_not: '#f59e0b',
+  };
+
+  list.innerHTML = steps.map((s, i) => {
+    const color = actionColors[s.action] || '#64748b';
+    let detail = '';
+    if (s.x !== undefined && s.y !== undefined) detail = `(${s.x}, ${s.y})`;
+    else if (s.x1 !== undefined) detail = `(${s.x1},${s.y1}) → (${s.x2},${s.y2})`;
+    else if (s.seconds !== undefined) detail = `${s.seconds}s`;
+    else if (s.text) detail = s.text.substring(0, 30);
+    else if (s.package) detail = s.package;
+    else if (s.keycode) detail = `keycode ${s.keycode}`;
+
+    return `<div class="step-item">
+      <div class="step-num" style="background:${color}">${i+1}</div>
+      <div class="step-info">
+        <div class="step-action" style="color:${color}">${s.action}</div>
+        ${detail ? `<div class="step-detail">${detail}</div>` : ''}
+        ${s.label ? `<div class="step-label-badge" style="color:var(--yellow);font-size:11px;font-style:italic">${s.label}</div>` : ''}
+      </div>
+      <div class="step-actions">
+        <button class="step-btn up" onclick="moveStep(${i},-1)" title="Naik"><i class="fa-solid fa-chevron-up"></i></button>
+        <button class="step-btn down" onclick="moveStep(${i},1)" title="Turun"><i class="fa-solid fa-chevron-down"></i></button>
+        <button class="step-btn del" onclick="removeStep(${i})" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// JSON PREVIEW
+// ═══════════════════════════════════════════════════════════
+function buildMacroObject() {
+  return {
+    name: document.getElementById('macro-name').value || 'macro_baru',
+    description: document.getElementById('macro-desc').value || '',
+    steps: steps,
+  };
+}
+
+function updateJsonPreview() {
+  const preview = document.getElementById('json-preview');
+  preview.textContent = JSON.stringify(buildMacroObject(), null, 2);
+}
+
+function copyJson() {
+  const text = JSON.stringify(buildMacroObject(), null, 2);
+  navigator.clipboard.writeText(text).then(() => toast('JSON disalin!', 'success'));
+}
+
+// ═══════════════════════════════════════════════════════════
+// SAVE & TEST
+// ═══════════════════════════════════════════════════════════
+async function saveMacro() {
+  if (steps.length === 0) { toast('Macro masih kosong!', 'error'); return; }
+  const name = document.getElementById('macro-name').value.trim();
+  if (!name) { toast('Nama macro harus diisi!', 'error'); return; }
+
+  const macro = buildMacroObject();
+  try {
+    const res = await fetch(`/api/macros/${encodeURIComponent(name)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': await getApiKey() },
+      body: JSON.stringify(macro),
+    });
+    const d = await res.json();
+    if (res.ok) {
+      toast(`✅ Macro "${name}" berhasil disimpan! (${steps.length} steps)`, 'success');
+    } else {
+      toast('Gagal simpan: ' + (d.detail || JSON.stringify(d)), 'error');
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+async function testMacro() {
+  if (steps.length === 0) { toast('Macro masih kosong!', 'error'); return; }
+  const name = document.getElementById('macro-name').value.trim() || 'preview_test';
+  // Simpan dulu lalu trigger
+  await saveMacro();
+  await new Promise(r => setTimeout(r, 500));
+  try {
+    const txnId = 'TEST_' + Date.now();
+    const res = await fetch('/api/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': await getApiKey() },
+      body: JSON.stringify({ transaction_id: txnId, task_type: name, params: {} }),
+    });
+    const d = await res.json();
+    if (res.status === 202) {
+      toast(`🚀 Macro "${name}" dijalankan! (TXN: ${txnId})`, 'info');
+    } else {
+      toast('Gagal trigger: ' + JSON.stringify(d), 'error');
+    }
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+  }
+}
+
+function clearAll() {
+  if (!confirm('Hapus semua steps?')) return;
+  steps = [];
+  renderSteps();
+  toast('Steps dihapus', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t, i) => {
+    const names = ['steps', 'actions', 'json'];
+    t.className = 'tab' + (names[i] === name ? ' active' : '');
+  });
+  document.querySelectorAll('.tab-content').forEach(c => c.className = 'tab-content');
+  const el = document.getElementById('tab-' + name);
+  if (el) el.className = 'tab-content active';
+  if (name === 'json') updateJsonPreview();
+}
+
+let cachedApiKey = null;
+async function getApiKey() {
+  if (cachedApiKey) return cachedApiKey;
+  cachedApiKey = prompt('Masukkan API Key:', '') || 'change_me';
+  return cachedApiKey;
+}
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = { success: 'fa-check-circle', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  el.innerHTML = `<i class="fa-solid ${icons[type]||'fa-circle-info'}"></i> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+</script>
+</body>
+</html>

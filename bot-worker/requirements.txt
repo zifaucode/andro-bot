@@ -1,0 +1,5 @@
+# BOT-ANDRO Bot Worker Dependencies
+fastapi
+uvicorn
+python-dotenv
+requests
