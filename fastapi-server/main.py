@@ -114,6 +114,26 @@ def get_recorder(request: Request) -> Response:
     return "<h1>Recorder template not found</h1>"
 
 
+# ── Setup & Settings ──────────────────────────────────────────────────────────
+@app.get("/setup", tags=["Tools"], response_class=HTMLResponse)
+def get_setup(request: Request) -> Response:
+    # Anyone can access setup page HTML, but the API calls inside require the default api key
+    setup_path = Path(__file__).parent / "setup.html"
+    if setup_path.exists():
+        return setup_path.read_text(encoding="utf-8")
+    return "<h1>Setup template not found</h1>"
+
+@app.get("/settings", tags=["Tools"], response_class=HTMLResponse)
+def get_settings(request: Request) -> Response:
+    if not get_auth_token(request):
+        return RedirectResponse(url="/login", status_code=303)
+
+    settings_path = Path(__file__).parent / "settings.html"
+    if settings_path.exists():
+        return settings_path.read_text(encoding="utf-8")
+    return "<h1>Settings template not found</h1>"
+
+
 # ── Direct run ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn

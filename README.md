@@ -83,18 +83,7 @@ adb devices
 # 127.0.0.1:5555    device
 ```
 
-### 5. Edit Konfigurasi
-
-```bash
-# Ganti API key (WAJIB!)
-nano ~/BOT-ANDRO/fastapi-server/.env
-
-# Field penting:
-# API_KEY=ganti_dengan_yang_aman
-# DASHBOARD_PASS=ganti_juga
-```
-
-### 6. Jalankan Bot
+### 5. Jalankan Bot & Akses Web GUI
 
 ```bash
 bash ~/BOT-ANDRO/start.sh
@@ -120,10 +109,19 @@ Output yang diharapkan:
 ╚══════════════════════════════════════════════════╝
 ```
 
-**⚠️ Simpan URL Cloudflare tersebut ke konfigurasi Laravel Anda!**
+**Langkah Terakhir (Sangat Penting):**
+1. Buka URL Cloudflare di atas melalui browser (HP/PC) dan tambahkan `/setup`. 
+   Contoh: `https://xxx.trycloudflare.com/setup`
+2. Ikuti **Setup Wizard** modern di browser untuk:
+   - Membuat/mengganti API Key dan Password Dashboard.
+   - Tes koneksi ADB.
+3. Setelah selesai, Anda akan masuk ke **Web Dashboard** interaktif tempat Anda menekan tombol "Start Bot", mengedit *Macro*, memonitor log, dan ubah `.env` tanpa menggunakan command line lagi!
 
-### 7. Stop Bot
+**⚠️ Simpan URL Cloudflare dan API Key Anda ke konfigurasi Laravel Anda!**
 
+### 6. Stop Bot
+Via Web Dashboard: Tekan tombol **Stop Bot**
+Via Termux:
 ```bash
 bash ~/BOT-ANDRO/stop.sh
 ```

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOT-ANDRO - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-accent: #3b82f6;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .navbar {
+            background: rgba(15, 23, 42, 0.8) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .container-main {
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        .settings-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            color: #fff;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            color: var(--primary-accent);
+            margin-right: 12px;
+        }
+
+        .form-control {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 10px 16px;
+            border-radius: 10px;
+        }
+
+        .form-control:focus {
+            background-color: rgba(15, 23, 42, 0.8);
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            color: #fff;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-accent), #2563eb);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center" href="/dashboard">
+                <i class="fa-brands fa-android text-success me-2 fs-4"></i>
+                <span class="fw-bold fs-5">BOT-ANDRO Settings</span>
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-gauge me-1"></i> Dashboard</a>
+                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-power-off"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container container-main">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="mb-0">Konfigurasi Sistem</h3>
+            <button class="btn btn-primary" onclick="saveConfig()" id="btnSave">
+                <i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan
+            </button>
+        </div>
+
+        <!-- FASTAPI SERVER CONF -->
+        <div class="settings-card">
+            <div class="section-title"><i class="fa-solid fa-server"></i> Server FastAPI (App)</div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">API Key</label>
+                    <input type="text" class="form-control" id="f_API_KEY">
+                    <div class="form-text text-muted small">Harus sama dengan di Laravel.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Dashboard Password</label>
+                    <input type="text" class="form-control" id="f_DASHBOARD_PASS">
+                    <div class="form-text text-muted small">Password login panel.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Port API (Local)</label>
+                    <input type="number" class="form-control" id="f_PORT">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Cloudflare URL</label>
+                    <input type="text" class="form-control" id="f_CLOUDFLARE_URL" disabled>
+                    <div class="form-text text-muted small">Di-generate otomatis.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOT WORKER CONF -->
+        <div class="settings-card">
+            <div class="section-title"><i class="fa-solid fa-robot"></i> Bot Worker Configurations</div>
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">Device Serial / ADB Port</label>
+                    <input type="text" class="form-control" id="w_DEVICE_SERIAL">
+                    <div class="form-text text-muted small">Contoh: 127.0.0.1:5555</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Task Timeout (Detik)</label>
+                    <input type="number" class="form-control" id="w_TASK_TIMEOUT">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Action Delay (Detik)</label>
+                    <input type="text" class="form-control" id="w_ACTION_DELAY" placeholder="1.0">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = localStorage.getItem("temp_api_key") || "ganti_dengan_api_key_rahasia"; // We need to grab this from a secured cookie or fallback
+        
+        async function fetchConfig() {
+            try {
+                // Actually the API doesn't need API key if we send it loosely or we can retrieve it safely since user is authenticated by cookie.
+                // Oh wait, /api/system/config is secured by verify_api_key. 
+                // We'll instruct the user to use standard frontend flow, BUT wait, user in dashboard has cookie.
+                // Let's modify verify_api_key to allow cookie fallback for `/system/` routes, or just fetch it here with a placeholder.
+                
+                const res = await fetch('/api/system/config?web=1'); // I'll modify the backend to accept cookie for dashboard use
+                if (!res.ok) {
+                    showToast("Gagal mengambil konfigurasi", "error");
+                    return;
+                }
+                const data = await res.json();
+                
+                // Populate FastAPI
+                document.getElementById('f_API_KEY').value = data.fastapi.API_KEY || '';
+                document.getElementById('f_DASHBOARD_PASS').value = data.fastapi.DASHBOARD_PASS || '';
+                document.getElementById('f_PORT').value = data.fastapi.PORT || '';
+                document.getElementById('f_CLOUDFLARE_URL').value = data.fastapi.CLOUDFLARE_URL || '';
+                
+                // Populate Worker
+                document.getElementById('w_DEVICE_SERIAL').value = data.worker.DEVICE_SERIAL || '';
+                document.getElementById('w_TASK_TIMEOUT').value = data.worker.TASK_TIMEOUT || '';
+                document.getElementById('w_ACTION_DELAY').value = data.worker.ACTION_DELAY || '';
+                
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function saveConfig() {
+            const btn = document.getElementById('btnSave');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Menyimpan...';
+            btn.disabled = true;
+
+            const payload = {
+                fastapi: {
+                    API_KEY: document.getElementById('f_API_KEY').value,
+                    DASHBOARD_PASS: document.getElementById('f_DASHBOARD_PASS').value,
+                    PORT: document.getElementById('f_PORT').value,
+                },
+                worker: {
+                    DEVICE_SERIAL: document.getElementById('w_DEVICE_SERIAL').value,
+                    TASK_TIMEOUT: document.getElementById('w_TASK_TIMEOUT').value,
+                    ACTION_DELAY: document.getElementById('w_ACTION_DELAY').value,
+                }
+            };
+
+            try {
+                const res = await fetch('/api/system/config?web=1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    alert("Berhasil disimpan!");
+                } else {
+                    alert("Gagal menyimpan!");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan';
+                btn.disabled = false;
+            }
+        }
+
+        window.onload = fetchConfig;
+    </script>
+</body>
+</html>

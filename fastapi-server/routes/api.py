@@ -15,8 +15,9 @@ import time
 from pathlib import Path
 from typing import Any
 import subprocess
+import dotenv
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status, Request
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
@@ -30,7 +31,10 @@ MACROS_DIR = Path(settings.BOT_WORKER_PATH).parent / "macros"
 
 # ── Auth ───────────────────────────────────────────────────────────────────────
 
-def verify_api_key(x_api_key: str = Header(..., alias="X-API-Key")) -> str:
+def verify_api_key(request: Request, x_api_key: str = Header(None, alias="X-API-Key")) -> str:
+    if request.query_params.get("web") == "1" and request.cookies.get("andro_auth") == settings.DASHBOARD_PASS:
+        return "web_auth"
+    
     if x_api_key != settings.API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     return x_api_key
@@ -364,3 +368,88 @@ def delete_macro(name: str, _key: str = Depends(verify_api_key)) -> dict:
         raise HTTPException(status_code=404, detail=f"Macro '{name}' tidak ditemukan")
     path.unlink()
     return {"success": True, "message": f"Macro '{name}' dihapus"}
+
+
+# ── System / Setup ────────────────────────────────────────────────────────────
+
+FASTAPI_ENV_PATH = Path(settings.BOT_WORKER_PATH).parent.parent / "fastapi-server" / ".env"
+WORKER_ENV_PATH = Path(settings.BOT_WORKER_PATH).parent / ".env"
+
+@router.get("/system/config", summary="Get System Config")
+def get_system_config(_key: str = Depends(verify_api_key)) -> dict:
+    fastapi_config = dotenv.dotenv_values(FASTAPI_ENV_PATH)
+    worker_config = dotenv.dotenv_values(WORKER_ENV_PATH)
+    
+    return {
+        "fastapi": fastapi_config,
+        "worker": worker_config
+    }
+
+@router.post("/system/config", summary="Save System Config")
+def save_system_config(
+    body: dict = Body(...),
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    fastapi_data = body.get("fastapi", {})
+    worker_data = body.get("worker", {})
+    
+    # Save the keys using dotenv.set_key
+    for k, v in fastapi_data.items():
+        if v is not None:
+            dotenv.set_key(str(FASTAPI_ENV_PATH), k, str(v))
+            
+    for k, v in worker_data.items():
+        if v is not None:
+            dotenv.set_key(str(WORKER_ENV_PATH), k, str(v))
+            
+    return {"success": True, "message": "Konfigurasi berhasil disimpan."}
+
+@router.post("/system/adb/connect", summary="Connect ADB via IP:Port")
+def connect_adb(
+    body: dict = Body(...),
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    device = body.get("device", "127.0.0.1:5555")
+    try:
+        result = subprocess.run(["adb", "connect", device], capture_output=True, text=True, timeout=10)
+        output = result.stdout + result.stderr
+        
+        if "connected to" in output.lower() or "already connected" in output.lower():
+            # Save to worker_env
+            dotenv.set_key(str(WORKER_ENV_PATH), "DEVICE_SERIAL", device)
+            return {"success": True, "message": f"Berhasil terkoneksi ke {device}", "output": output}
+        else:
+            return {"success": False, "message": f"Gagal koneksi. Output: {output}", "output": output}
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+@router.post("/system/bot/start", summary="Start Bot Worker")
+def start_bot(
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    script_dir = Path(settings.BOT_WORKER_PATH).parent.parent
+    start_sh = script_dir / "start_simple.sh"
+    if not start_sh.exists():
+        return {"success": False, "message": "start_simple.sh tidak ditemukan!"}
+        
+    try:
+        # Start in background using Popen
+        subprocess.Popen(
+            ["bash", str(start_sh)], 
+            cwd=str(script_dir)
+        )
+        return {"success": True, "message": "Bot process sedang dijalankan di background."}
+    except Exception as e:
+         return {"success": False, "message": str(e)}
+
+@router.post("/system/bot/stop", summary="Stop Bot Worker")
+def stop_bot(
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    script_dir = Path(settings.BOT_WORKER_PATH).parent.parent
+    stop_sh = script_dir / "stop.sh"
+    try:
+        subprocess.run(["bash", str(stop_sh)], cwd=str(script_dir), timeout=5)
+        return {"success": True, "message": "Bot process telah dihentikan."}
+    except Exception as e:
+         return {"success": False, "message": str(e)}

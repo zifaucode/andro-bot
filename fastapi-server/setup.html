@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="id" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOT-ANDRO - Setup Wizard</title>
+    <!-- Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --primary-accent: #3b82f6;
+            --primary-hover: #2563eb;
+            --success-accent: #10b981;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .wizard-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wizard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-accent), var(--success-accent));
+        }
+
+        .step-container {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .step-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .brand-icon {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary-accent), var(--success-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .brand-title {
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 12px 16px;
+            border-radius: 12px;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            background-color: rgba(15, 23, 42, 0.8);
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            color: #fff;
+        }
+
+        .form-label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-accent), #2563eb);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.3);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 20px -3px rgba(37, 99, 235, 0.4);
+            background: linear-gradient(135deg, #4f46e5, var(--primary-accent));
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .progress-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .progress-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--glass-border);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .progress-step {
+            width: 32px;
+            height: 32px;
+            background: var(--bg-color);
+            border: 2px solid var(--glass-border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active {
+            border-color: var(--primary-accent);
+            color: var(--primary-accent);
+            background: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .progress-step.completed {
+            background: var(--primary-accent);
+            border-color: var(--primary-accent);
+            color: #fff;
+        }
+
+        .status-box {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            max-height: 150px;
+            overflow-y: auto;
+            color: var(--success-accent);
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="wizard-card">
+        <div class="brand-header">
+            <i class="fa-brands fa-android brand-icon"></i>
+            <h2 class="brand-title">BOT-ANDRO</h2>
+            <div class="brand-subtitle">Setup Wizard & Installation</div>
+        </div>
+
+        <div class="progress-indicator">
+            <div class="progress-step active" id="indicator-1">1</div>
+            <div class="progress-step" id="indicator-2">2</div>
+            <div class="progress-step" id="indicator-3">3</div>
+            <div class="progress-step" id="indicator-4"><i class="fa-solid fa-check"></i></div>
+        </div>
+
+        <!-- Step 1: Welcome & Prerequisites -->
+        <div class="step-container active" id="step-1">
+            <h4 class="mb-3">Selamat Datang!</h4>
+            <p class="text-muted mb-4">Mari persiapkan BOT-ANDRO dalam beberapa langkah mudah. Pastikan Anda sudah mengaktifkan <strong>Wireless Debugging</strong> di Developer Options HP Android Anda.</p>
+            
+            <div class="alert" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #93c5fd; border-radius: 12px;">
+                <i class="fa-solid fa-circle-info me-2"></i> Mode ini memungkinkan bot berjalan langsung di HP ini tanpa perlu komputer.
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <button type="button" class="btn btn-primary" onclick="nextStep(2)">Mulai Setup <i class="fa-solid fa-arrow-right ms-2"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 2: API & Security -->
+        <div class="step-container" id="step-2">
+            <h4 class="mb-3">Keamanan & Akses</h4>
+            <p class="text-muted mb-4">Buat kredensial Anda. API Key digunakan oleh Laravel Anda untuk mengirim request ke bot ini.</p>
+            
+            <div class="mb-3">
+                <label class="form-label">API Key Rahasia</label>
+                <input type="text" class="form-control" id="inputApiKey" placeholder="Contoh: android-secret-123">
+                <div class="form-text" style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 6px;">Harus sama dengan di config Laravel.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Password Dashboard</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="inputDashPass" placeholder="Password untuk login web ini">
+                    <button class="btn btn-outline" type="button" onclick="generatePass()"><i class="fa-solid fa-dice"></i></button>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline" onclick="prevStep(1)"><i class="fa-solid fa-arrow-left me-2"></i> Kembali</button>
+                <button type="button" class="btn btn-primary" onclick="nextStep(3)">Lanjut <i class="fa-solid fa-arrow-right ms-2"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 3: ADB Connection -->
+        <div class="step-container" id="step-3">
+            <h4 class="mb-3">Koneksi ADB Loka</h4>
+            <p class="text-muted mb-4">Hubungkan bot ke sistem HP Anda. Cek port di Settings -> Developer Options -> Wireless Debugging.</p>
+            
+            <div class="mb-3">
+                <label class="form-label">Device IP & Port</label>
+                <input type="text" class="form-control" id="inputAdbPort" placeholder="contoh: 127.0.0.1:5555" value="127.0.0.1:5555">
+                <div class="form-text" style="color: rgba(255,255,255,0.4); font-size: 0.8rem; margin-top: 6px;">
+                    Android 10: biasanya 5555<br>
+                    Android 11+: Cek "IP address & Port" di menu Wireless Debugging
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-outline w-100 mb-3" onclick="testAdb()">
+                <i class="fa-solid fa-plug me-2"></i> Test Koneksi ADB
+            </button>
+            
+            <div id="adbStatus" class="status-box d-none"></div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-outline" onclick="prevStep(2)"><i class="fa-solid fa-arrow-left me-2"></i> Kembali</button>
+                <button type="button" class="btn btn-primary" onclick="saveAndFinish()" id="btnFinish" disabled>Simpan & Selesai <i class="fa-solid fa-check ms-2"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div class="step-container text-center" id="step-4">
+            <div class="mb-4 mt-2">
+                <i class="fa-solid fa-circle-check" style="font-size: 4rem; color: var(--success-accent);"></i>
+            </div>
+            <h4 class="mb-3">Setup Selesai!</h4>
+            <p class="text-muted mb-4">Konfigurasi berhasil disimpan. Saatnya masuk ke dashboard untuk mengontrol bot Anda.</p>
+            
+            <button type="button" class="btn btn-primary w-100" onclick="goToDashboard()">
+                Buka Dashboard <i class="fa-solid fa-gauge ms-2"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // Default API key format for making requests
+        const DEFAULT_API_KEY = "ganti_dengan_api_key_rahasia";
+
+        // Navigation
+        function updateIndicators(step) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`indicator-${i}`);
+                if (i < step) {
+                    el.className = 'progress-step completed';
+                    if(i !== 4) el.innerHTML = '<i class="fa-solid fa-check"></i>';
+                } else if (i === step) {
+                    el.className = 'progress-step active';
+                    if(i !== 4) el.innerText = i;
+                } else {
+                    el.className = 'progress-step';
+                    if(i !== 4) el.innerText = i;
+                }
+            }
+        }
+
+        function nextStep(step) {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            updateIndicators(step);
+            
+            if (step === 2 && !document.getElementById('inputApiKey').value) {
+                // Auto generate on first view
+                generatePass();
+                document.getElementById('inputApiKey').value = 'M2B-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+            }
+        }
+
+        function prevStep(step) {
+            document.querySelectorAll('.step-container').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            updateIndicators(step);
+        }
+
+        function generatePass() {
+            const pass = Math.random().toString(36).substr(2, 10);
+            document.getElementById('inputDashPass').value = pass;
+        }
+
+        async function testAdb() {
+            const device = document.getElementById('inputAdbPort').value;
+            const statusBox = document.getElementById('adbStatus');
+            const btnFinish = document.getElementById('btnFinish');
+            
+            statusBox.classList.remove('d-none');
+            statusBox.style.color = '#fff';
+            statusBox.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Mencoba terhubung ke ' + device + '...';
+            
+            try {
+                const res = await fetch('/api/system/adb/connect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': DEFAULT_API_KEY // Gunakan ini sementara
+                    },
+                    body: JSON.stringify({ device: device })
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    statusBox.style.color = 'var(--success-accent)';
+                    statusBox.innerHTML = '<i class="fa-solid fa-circle-check me-2"></i> Berhasil!<br><br>' + data.output.replace(/\n/g, '<br>');
+                    btnFinish.disabled = false;
+                } else {
+                    statusBox.style.color = '#f43f5e';
+                    statusBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i> Gagal:<br><br>' + data.message;
+                    btnFinish.disabled = false; // Allow continuing anyway for manual fixes
+                }
+            } catch (err) {
+                statusBox.style.color = '#f43f5e';
+                statusBox.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-2"></i> Error jaringan: ' + err.message;
+                btnFinish.disabled = false;
+            }
+        }
+
+        async function saveAndFinish() {
+            const apiKey = document.getElementById('inputApiKey').value;
+            const dashPass = document.getElementById('inputDashPass').value;
+            const adbPort = document.getElementById('inputAdbPort').value;
+            
+            const btn = document.getElementById('btnFinish');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            btn.disabled = true;
+
+            const payload = {
+                fastapi: {
+                    API_KEY: apiKey,
+                    DASHBOARD_PASS: dashPass
+                },
+                worker: {
+                    DEVICE_SERIAL: adbPort
+                }
+            };
+
+            try {
+                const res = await fetch('/api/system/config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': DEFAULT_API_KEY
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    nextStep(4);
+                } else {
+                    alert("Gagal menyimpan konfigurasi!");
+                    btn.innerHTML = 'Simpan & Selesai <i class="fa-solid fa-check ms-2"></i>';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+                btn.innerHTML = 'Simpan & Selesai <i class="fa-solid fa-check ms-2"></i>';
+                btn.disabled = false;
+            }
+        }
+
+        function goToDashboard() {
+            window.location.href = '/login';
+        }
+    </script>
+</body>
+</html>
