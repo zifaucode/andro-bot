@@ -25,4 +25,21 @@ fi
 pkill -f "uvicorn main:app" 2>/dev/null || true
 pkill -f "cloudflared tunnel" 2>/dev/null || true
 
-echo "  ✅ Semua service dihentikan."
+# Kill worker python script jika ada yang tersangkut/berjalan di background
+pkill -f "python worker.py" 2>/dev/null || true
+echo "  ✅ Membersihkan memori proses Bot (Worker)..."
+
+# Mematikan Wake Lock agar baterai kembali normal (bisa mode sleep/istirahat)
+echo "  ✅ Mematikan fitur Wake-Lock (Baterai HP kembali nomal)..."
+termux-wake-unlock 2>/dev/null || true
+
+echo ""
+echo "╔══════════════════════════════════════════════════════════╗"
+echo "║  ✅ SELURUH SERVICE SERVER TELAH BERHASIL DIMATIKAN!     ║"
+echo "╠══════════════════════════════════════════════════════════╣"
+echo "║  Untuk menutup Termux hingga bersih dan tak memakan RAM: ║"
+echo "║  👉 Ketik perintah ---->  exit   (lalu tekan Enter)      ║"
+echo "║                                                          ║"
+echo "║  Atau klik tanda (X) 'EXIT' di bar Notifikasi Termux.    ║"
+echo "╚══════════════════════════════════════════════════════════╝"
+echo ""

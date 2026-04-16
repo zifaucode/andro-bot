@@ -19,20 +19,39 @@ echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ─── 0. Mencegah Android Sleep ──────────────────────────────────
+echo "[0/6] Mengaktifkan Termux Wake-Lock (Agar jalan di background)..."
+termux-wake-lock
+
 # ─── 1. Update package list ─────────────────────────────────────
 echo "[1/6] Update & upgrade packages Termux..."
 pkg update -y && pkg upgrade -y
 
 # ─── 2. Install dependencies system ─────────────────────────────
 echo ""
-echo "[2/6] Install dependencies sistem..."
-pkg install -y python git android-tools wget
+echo "[2/6] Install dependencies sistem Android (Python, Git, ADB, Wget)..."
+# Ditambahkan clang make binutils karena terkadang instalasi library python butuh dicompile di Termux
+pkg install -y python git android-tools wget clang make binutils
 
 # ─── 3. Install Python dependencies ─────────────────────────────
 echo ""
-echo "[3/6] Install Python packages (FastAPI, uvicorn, dll)..."
+echo "[3/6] Install library dependencies Python..."
+
+echo "    > [1/5] Meng-upgrade pip (Package Manager)..."
 pip install --upgrade pip
-pip install fastapi uvicorn python-dotenv requests
+
+echo "    > [2/5] Menginstall requests (Digunakan untuk menembak API)..."
+pip install requests
+
+echo "    > [3/5] Menginstall python-dotenv (Digunakan untuk membaca konfigurasi .env)..."
+pip install python-dotenv
+
+echo "    > [4/5] Menginstall uvicorn (Digunakan untuk server web aplikasi)..."
+pip install uvicorn
+
+echo "    > [5/5] Menginstall fastapi (Digunakan untuk arsitektur API Bot)..."
+echo "    ⏳ PENTING: Proses instalasi FastAPI biasanya memakan waktu agak lama karena kompilasi 'pydantic'. Jangan ditutup, mohon ditunggu..."
+pip install fastapi
 
 # ─── 4. Install Cloudflared ─────────────────────────────────────
 echo ""

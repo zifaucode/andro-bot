@@ -28,28 +28,37 @@ Bot automation yang berjalan **langsung di device Android fisik** via Termux —
 
 ## Setup (Pertama Kali)
 
-### 1. Install Termux dari F-Droid
-> ⚠️ JANGAN install dari Play Store — versinya terbatas dan tidak bisa install `android-tools`.
-> Download dari: https://f-droid.org/packages/com.termux/
+### 1. Install & Menghapus Termux
 
-### 2. Copy project ke HP
+**Menginstall Termux:**
+> ⚠️ JANGAN install Termux dari Google Play Store karena versinya usang dan tidak bisa menginstall `android-tools`.
+> **Download & Install dari F-Droid:** https://f-droid.org/packages/com.termux/
 
-Option A — via Git (jika project sudah di GitHub):
+Setelah install selesai, buka aplikasi Termux dan tunggu sejenak sampai muncul baris perintah (terminal).
+
+**Menghapus Termux / Project:**
+- **Menghapus Project Bot:** Jika ingin menghapus bot atau mengulang instalasi (clone ulang), jalankan perintah: `rm -rf ~/andro-bot`
+- **Menghapus Keseluruhan Termux:** Jika terjadi error sistem Termux, buka Pengaturan HP -> Aplikasi -> Termux -> **Clear Data**, lalu buka ulang aplikasinya.
+
+### 2. Copy project ke HP (Termux)
+
+Option A — via Git (Disarankan):
 ```bash
+pkg update && pkg upgrade -y
 pkg install git -y
-git clone https://github.com/yourrepo/BOT-ANDRO.git ~/BOT-ANDRO
+git clone https://github.com/zifaucode/andro-bot.git ~/andro-bot
 ```
 
-Option B — via USB transfer atau Termux scp:
+Option B — via USB transfer:
 ```bash
-# Copy folder BOT-ANDRO ke /sdcard/BOT-ANDRO dulu
-# Lalu di Termux:
-cp -r /sdcard/BOT-ANDRO ~/BOT-ANDRO
+# Copy folder andro-bot ke /sdcard/andro-bot (Internal Storage) dulu
+# Lalu buka Termux dan ketik:
+cp -r /sdcard/andro-bot ~/andro-bot
 ```
 
 ### 3. Jalankan Setup
 ```bash
-cd ~/BOT-ANDRO
+cd ~/andro-bot
 bash setup_termux.sh
 ```
 
@@ -86,7 +95,7 @@ adb devices
 ### 5. Jalankan Bot & Akses Web GUI
 
 ```bash
-bash ~/BOT-ANDRO/start.sh
+bash ~/andro-bot/start.sh
 ```
 
 Output yang diharapkan:
@@ -119,12 +128,21 @@ Output yang diharapkan:
 
 **⚠️ Simpan URL Cloudflare dan API Key Anda ke konfigurasi Laravel Anda!**
 
-### 6. Stop Bot
-Via Web Dashboard: Tekan tombol **Stop Bot**
-Via Termux:
+### 6. Stop Server & Tutup Termux (Clean Shutdown)
+
+Jika Anda ingin mematikan bot, menonaktifkan *Wake-Lock* (agar baterai tidak terkuras saat HP standby), serta menutup Termux sepenuhnya:
+
+1. **Jalankan script `stop.sh`** untuk mematikan FastAPI, Cloudflared tunnel, proses Python, dan menormalkan *Wake-Lock* secara otomatis:
 ```bash
-bash ~/BOT-ANDRO/stop.sh
+bash ~/andro-bot/stop.sh
 ```
+
+2. **Keluar dari Termux (Kill Terminal):**
+Agar Termux tidak terus memakan memori/RAM di background, selalu tutup sesi dengan rapi menggunakan perintah:
+```bash
+exit
+```
+> 💡 **Penting:** Jika muncul notifikasi "Termux: x sessions running", Anda juga bisa tekan tombol **"EXIT"** secara langsung pada bar notifikasi Android untuk melakukan proses Kill secara aman.
 
 ## Koordinat Macro
 
@@ -170,5 +188,5 @@ termux-wake-lock
 | ADB connect gagal | Aktifkan Wireless Debugging di Developer Options |
 | Port 5555 tidak bisa | Android 11+: cek port di Settings → Wireless Debugging |
 | Cloudflared tidak install | Cek arsitektur: `uname -m` |
-| FastAPI crash | Cek log: `cat ~/BOT-ANDRO/logs/fastapi.log` |
+| FastAPI crash | Cek log: `cat ~/andro-bot/logs/fastapi.log` |
 | Termux tertutup saat idle | Jalankan `termux-wake-lock` |
