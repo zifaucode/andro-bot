@@ -69,28 +69,43 @@ Script ini akan otomatis:
 - ✅ Install cloudflared (ARM64/ARM)
 - ✅ Buat file `.env` dari `.env.example`
 
-### 4. Aktifkan ADB Wireless di HP
+### 4. Hubungkan Bot ke Layar Android (Akses ADB)
 
-**Android 10:**
-```
-Settings → Developer Options → ADB over network → ON
-(beberapa ROM: "ADB via WiFi")
-```
+Agar Termux (Bot) bisa "menyentuh" layar HP secara otomatis, Anda harus memberinya izin akses ADB lokal. **Pilih salah satu dari 2 metode di bawah ini:**
 
-**Android 11+:**
-```
-Settings → Developer Options → Wireless Debugging → ON
-```
+#### METODE A: Bantuan PC / Komputer (🌟 Sangat Direkomendasikan)
+Metode ini sangat diandalkan karena Anda hanya perlu colok kabel selama 10 detik. Setelahnya, Terminal Termux memiliki akses nirkabel permanen ke layar HP menggunakan Port `5555` tanpa perlu diacak (bypass keamanan Android 11+).
 
-Lalu di Termux:
-```bash
-adb connect 127.0.0.1:5555
+*(Persiapan PC: Pastikan Anda memiliki aplikasi ADB di Windows. Jika belum, download [Platform Tools ini (6 MB)](https://dl.google.com/android/repository/platform-tools-latest-windows.zip) lalu Ekstrak/Unzip ke sebuah folder. Anda juga bisa menggunakan `adb.exe` bawaan LDPlayer jika pernah menginstallnya).*
 
-# Verifikasi:
-adb devices
-# Output yang diharapkan:
-# 127.0.0.1:5555    device
-```
+1. Di HP: Aktifkan **USB Debugging** (Debugging USB) pada Opsi Pengembang.
+2. Colokkan HP ke PC menggunakan kabel data.
+3. Di PC: Buka folder hasil ekstrak *platform-tools*, klik kiri *address bar* folder di atas, ketik **`cmd`** lalu tekan Enter. (Ini akan membuka Terminal CMD).
+4. Di Terminal CMD PC, ketik: 
+   ```cmd
+   adb.exe devices
+   ```
+   > 💡 **PENTING:** Jika terminal memunculkan kata `unauthorized`, lirik layar HP Anda sekarang! Centang pilihan *"Always allow from this computer"* lalu klik **Izinkan / Allow**.
+5. Setelah layar diizinkan, jalankan kembali `adb.exe devices`. Jika status sudah terbaca `device`, eksekusi perintah sakti pembuKa port ini:
+   ```cmd
+   adb.exe tcpip 5555
+   ```
+   *(Tanda sukses: Akan muncul respons "restarting in TCP mode port: 5555").*
+6. Selesai! Silakan **cabut selamanya kabel datanya**. Mulai sekarang Termux/Script akan otomatis terkoneksi ke port `5555` dengan sakti (kecuali jika suatu saat HP Anda di-restart/habis baterai, maka Anda tinggal mencoloknya sebentar lagi).
+
+#### METODE B: Tanpa Bantuan PC (Wireless Debugging Android 11+)
+Jika Anda sama sekali tidak memiliki komputer, Android 11+ memiliki tingkat keamanan ganda yang mewajibkan Anda memasukkan *PIN Pairing*.
+
+> ⚠️ **Trik Penting:** Buka Termux dalam fitur **Jendela Mengambang (Floating Window / Pop-up view)** atau **Split-screen** bersamaan dengan aplikasi Pengaturan HP. Jika Anda pindah aplikasi (Recent app), port pairing Android akan langsung diganti lagi oleh sistem!
+
+1. Ke **Pengaturan -> Developer Options -> Wireless Debugging** (Didebug Nirkabel).
+2. Klik opsi **Pair device with pairing code** (Pasangkan dengan kode). Akan muncul PIN 6-digit dan IP:PORT *sementara* (misal: `192.168.1.5:41414`).
+3. Dari jendela Termux mengambang, ketik perintah *pairing*:
+   ```bash
+   adb pair 127.0.0.1:PORT_YANG_TAMPIL
+   # Contoh: adb pair 127.0.0.1:41414
+   ```
+4. Masukkan kode 6-digit PIN. Jika muncul `Successfully paired`, tutup pop-up di layar Pengaturan. Anda sekarang siap menjalankan bot!
 
 ### 5. Jalankan Bot & Akses Web GUI
 
