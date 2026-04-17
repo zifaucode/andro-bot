@@ -234,6 +234,52 @@ def get_live_screenshot():
 
 
 @router.get(
+    "/screenshot/delayed",
+    summary="Delayed Screenshot",
+    description="Tunggu N detik lalu ambil screenshot. Berguna agar user bisa pindah ke app yang mau direkam.",
+    tags=["Recorder"],
+)
+def get_delayed_screenshot(seconds: int = 5):
+    """
+    Tunggu `seconds` detik (max 15) lalu ambil screenshot device.
+    Gunakan ini saat recorder dibuka di HP yang sama, user punya waktu
+    untuk minimize browser dan pindah ke app yang ingin direkam.
+    """
+    seconds = max(1, min(seconds, 15))  # clamp 1-15 detik
+    time.sleep(seconds)
+
+    try:
+        serial = _get_device_serial()
+        termux_prefix = os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
+        temp_local = os.path.join(termux_prefix, "tmp", f"bot_recorder_{int(time.time())}.png")
+
+        r1 = subprocess.run(
+            ["adb", "-s", serial, "shell", "screencap", "-p", _SCREENSHOT_TEMP],
+            capture_output=True, timeout=10
+        )
+        if r1.returncode != 0:
+            raise RuntimeError(f"screencap gagal: {r1.stderr.decode(errors='ignore')}")
+
+        r2 = subprocess.run(
+            ["adb", "-s", serial, "pull", _SCREENSHOT_TEMP, temp_local],
+            capture_output=True, timeout=10
+        )
+        if r2.returncode != 0:
+            raise RuntimeError(f"adb pull gagal: {r2.stderr.decode(errors='ignore')}")
+
+        subprocess.run(
+            ["adb", "-s", serial, "shell", "rm", _SCREENSHOT_TEMP],
+            capture_output=True, timeout=5
+        )
+
+        png_data = Path(temp_local).read_bytes()
+        Path(temp_local).unlink(missing_ok=True)
+        return Response(content=png_data, media_type="image/png")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Delayed screenshot gagal: {exc}")
+
+
+@router.get(
     "/device-info",
     summary="Device Screen Info",
     description="Ambil resolusi layar device (untuk scaling koordinat di Recorder).",

@@ -426,6 +426,9 @@
       <button class="btn btn-primary" id="btn-refresh" onclick="refreshScreen()">
         <i class="fa-solid fa-rotate"></i> Refresh
       </button>
+      <button class="btn btn-warn" id="btn-delayed" onclick="delayedCapture()" title="Pindah ke app lain dulu, screenshot diambil otomatis setelah countdown">
+        <i class="fa-solid fa-camera"></i> Capture 5s
+      </button>
       <button class="btn btn-ghost" id="btn-tap-mode" onclick="setMode('tap')">
         <i class="fa-solid fa-hand-pointer"></i> Tap Mode
       </button>
@@ -438,6 +441,28 @@
       <div class="screen-mode-badge" id="mode-badge">
         <i class="fa-solid fa-hand-pointer"></i> TAP MODE
       </div>
+    </div>
+
+    <!-- Countdown Overlay -->
+    <div id="countdown-overlay" style="
+      display:none; position:fixed; inset:0; z-index:9999;
+      background:rgba(0,0,0,0.82); backdrop-filter:blur(4px);
+      flex-direction:column; align-items:center; justify-content:center;
+      gap:16px; color:#fff; font-family:'Inter',sans-serif;
+    ">
+      <div style="font-size:13px; color:#94a3b8; letter-spacing:2px; text-transform:uppercase;">Pindah ke app yang ingin direkam!</div>
+      <div id="countdown-num" style="
+        font-size:96px; font-weight:800; line-height:1;
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+        animation: pulse 1s ease-in-out infinite;
+      ">5</div>
+      <div style="font-size:14px; color:#64748b;">Screenshot akan diambil otomatis...</div>
+      <button onclick="cancelDelayed()" style="
+        margin-top:8px; padding:8px 24px; border-radius:8px;
+        background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+        color:#fff; cursor:pointer; font-size:13px;
+      ">❌ Batal</button>
     </div>
 
     <div class="screen-wrap" id="screen-wrap" onclick="handleScreenClick(event)" onmousedown="handleSwipeStart(event)" onmousemove="handleSwipeMove(event)" onmouseup="handleSwipeEnd(event)">
@@ -612,7 +637,6 @@ async function loadDeviceInfo() {
 async function refreshScreen() {
   const btn = document.getElementById('btn-refresh');
   const loading = document.getElementById('screen-loading');
-  const wrap = document.getElementById('screen-wrap');
   const placeholder = document.getElementById('screen-placeholder');
   const img = document.getElementById('screen-img');
 
@@ -641,6 +665,71 @@ async function refreshScreen() {
     btn.disabled = false;
     toast('Gagal ambil screenshot: ' + e.message, 'error');
   }
+}
+
+// ── Delayed Screenshot (Countdown) ──
+let _delayedAborted = false;
+let _countdownTimer = null;
+
+async function delayedCapture(seconds = 5) {
+  _delayedAborted = false;
+  const overlay = document.getElementById('countdown-overlay');
+  const numEl   = document.getElementById('countdown-num');
+  const btn      = document.getElementById('btn-delayed');
+
+  overlay.style.display = 'flex';
+  btn.disabled = true;
+
+  // Hitung mundur di browser (hanya visual, request tetap dikirim)
+  let remaining = seconds;
+  numEl.textContent = remaining;
+  _countdownTimer = setInterval(() => {
+    remaining--;
+    if (remaining <= 0) {
+      clearInterval(_countdownTimer);
+      numEl.textContent = '📸';
+    } else {
+      numEl.textContent = remaining;
+    }
+  }, 1000);
+
+  // Kirim request ke server (server sleep N detik lalu screenshot)
+  try {
+    const res = await fetch(`/api/screenshot/delayed?seconds=${seconds}&t=${Date.now()}`);
+    if (_delayedAborted) return;  // user batal
+    overlay.style.display = 'none';
+    btn.disabled = false;
+    clearInterval(_countdownTimer);
+
+    if (!res.ok) throw new Error('Status ' + res.status);
+    const blob = await res.blob();
+    const objectUrl = URL.createObjectURL(blob);
+
+    const img = document.getElementById('screen-img');
+    const placeholder = document.getElementById('screen-placeholder');
+    img.onload = () => {
+      placeholder.style.display = 'none';
+      img.style.display = 'block';
+    };
+    img.src = objectUrl;
+
+    await loadDeviceInfo();
+    toast('Screenshot berhasil diambil!', 'success');
+  } catch(e) {
+    if (_delayedAborted) return;
+    overlay.style.display = 'none';
+    btn.disabled = false;
+    clearInterval(_countdownTimer);
+    toast('Capture gagal: ' + e.message, 'error');
+  }
+}
+
+function cancelDelayed() {
+  _delayedAborted = true;
+  clearInterval(_countdownTimer);
+  document.getElementById('countdown-overlay').style.display = 'none';
+  document.getElementById('btn-delayed').disabled = false;
+  toast('Capture dibatalkan', 'info');
 }
 
 // ═══════════════════════════════════════════════════════════
