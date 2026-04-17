@@ -398,8 +398,31 @@
 
     /* ── Responsive ── */
     @media (max-width: 900px) {
-      .layout { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; }
-      .screen-panel { border-right: none; border-bottom: 1px solid var(--border); }
+      body { overflow-y: auto; }
+      .layout { 
+        display: flex; flex-direction: column; height: auto; min-height: calc(100vh - 60px); 
+      }
+      .screen-panel { 
+        min-height: 50vh; height: auto; flex: none; border-right: none; border-bottom: 2px solid var(--border); 
+      }
+      .screen-wrap { 
+        min-height: 40vh; 
+      }
+      .builder-panel { 
+        flex: auto; height: auto; min-height: 50vh; overflow: visible; 
+      }
+      .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .header h1 {
+        font-size: 16px;
+      }
+      .screen-toolbar {
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 8px 12px; font-size: 11.5px;
+      }
     }
 
     /* Scrollbar */
@@ -531,10 +554,25 @@
           <i class="fa-solid fa-clock" style="color:var(--yellow)"></i> Wait
         </button>
         <button class="qa-btn" onclick="showForm('swipe')">
-          <i class="fa-solid fa-hand" style="color:var(--cyan)"></i> Swipe
+          <i class="fa-solid fa-hand" style="color:var(--cyan)"></i> Custom Swipe
+        </button>
+        <button class="qa-btn" onclick="addDirectionalSwipe('up')">
+          <i class="fa-solid fa-arrow-up" style="color:var(--cyan)"></i> Swipe Up
+        </button>
+        <button class="qa-btn" onclick="addDirectionalSwipe('down')">
+          <i class="fa-solid fa-arrow-down" style="color:var(--cyan)"></i> Swipe Down
+        </button>
+        <button class="qa-btn" onclick="addDirectionalSwipe('left')">
+          <i class="fa-solid fa-arrow-left" style="color:var(--cyan)"></i> Swipe Left
+        </button>
+        <button class="qa-btn" onclick="addDirectionalSwipe('right')">
+          <i class="fa-solid fa-arrow-right" style="color:var(--cyan)"></i> Swipe Right
         </button>
         <button class="qa-btn" onclick="showForm('input_text')">
           <i class="fa-solid fa-keyboard" style="color:var(--pink)"></i> Input Text
+        </button>
+        <button class="qa-btn" onclick="addKeyAction('screenshot')" title="Akan tersimpan di bot-worker/output/screenshots/">
+          <i class="fa-solid fa-camera" style="color:var(--green)"></i> Screenshot
         </button>
         <button class="qa-btn" onclick="addKeyAction('key_back')">
           <i class="fa-solid fa-arrow-left" style="color:var(--muted)"></i> BACK
@@ -542,14 +580,8 @@
         <button class="qa-btn" onclick="addKeyAction('key_home')">
           <i class="fa-solid fa-house" style="color:var(--muted)"></i> HOME
         </button>
-        <button class="qa-btn" onclick="addKeyAction('screenshot')">
-          <i class="fa-solid fa-camera" style="color:var(--green)"></i> Screenshot
-        </button>
         <button class="qa-btn" onclick="showForm('launch_app')">
           <i class="fa-solid fa-rocket" style="color:var(--accent)"></i> Launch App
-        </button>
-        <button class="qa-btn" onclick="showForm('press_key')">
-          <i class="fa-solid fa-hashtag" style="color:var(--muted)"></i> Keycode
         </button>
         <button class="qa-btn" onclick="showForm('check_screen')">
           <i class="fa-solid fa-eye" style="color:var(--yellow)"></i> Check Screen
@@ -934,6 +966,41 @@ function addKeyAction(action) {
   switchTab('steps');
   toast(`Step ${action} ditambahkan`, 'success');
 }
+
+function addDirectionalSwipe(direction) {
+  let cx = Math.round(deviceW / 2);
+  let cy = Math.round(deviceH / 2);
+  let x1, y1, x2, y2;
+  
+  if (direction === 'up') {
+    x1 = cx; x2 = cx;
+    y1 = Math.round(deviceH * 0.8);
+    y2 = Math.round(deviceH * 0.2);
+  } else if (direction === 'down') {
+    x1 = cx; x2 = cx;
+    y1 = Math.round(deviceH * 0.2);
+    y2 = Math.round(deviceH * 0.8);
+  } else if (direction === 'left') {
+    y1 = cy; y2 = cy;
+    x1 = Math.round(deviceW * 0.8);
+    x2 = Math.round(deviceW * 0.2);
+  } else if (direction === 'right') {
+    y1 = cy; y2 = cy;
+    x1 = Math.round(deviceW * 0.2);
+    x2 = Math.round(deviceW * 0.8);
+  }
+  
+  addStep({
+    action: 'swipe',
+    x1: x1, y1: y1,
+    x2: x2, y2: y2,
+    duration_ms: 500,
+    label: `Swipe ${direction.toUpperCase()}`
+  });
+  switchTab('steps');
+  toast(`Swipe ${direction.toUpperCase()} ditambahkan`, 'success');
+}
+
 
 // ═══════════════════════════════════════════════════════════
 // DYNAMIC FORM

@@ -225,22 +225,27 @@
             <!-- Job List -->
             <div class="col-lg-8">
                 <div class="stats-card p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                         <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-check text-primary me-2"></i> Recent Transactions</h5>
-                        <button class="btn btn-sm btn-outline-secondary" onclick="fetchJobs()"><i class="fa-solid fa-rotate-right"></i></button>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-danger d-none" id="btnDeleteSelected" onclick="deleteSelectedJobs()"><i class="fa-solid fa-trash-can"></i> Delete Selected</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="clearAllJobs()"><i class="fa-solid fa-trash-can"></i> Delete All</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="fetchJobs()"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+                        </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-custom table-hover">
+                        <table class="table table-custom table-hover align-middle">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px;"><input type="checkbox" class="form-check-input" id="checkAll" onclick="toggleCheckAll()"></th>
                                     <th>TXN ID</th>
                                     <th>Status</th>
-                                    <th>Detail</th>
                                     <th>Updated</th>
+                                    <th class="text-end">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="jobsTable">
-                                <tr><td colspan="4" class="text-center text-muted py-4">Loading...</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -258,6 +263,25 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Modal Detail -->
+    <div class="modal fade" id="detailModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content text-white" style="background:#0f172a; border:1px solid rgba(255,255,255,0.1);">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info text-primary me-2"></i> Transaction Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-3">
+                    <div class="mb-2"><span class="badge bg-secondary" id="modalTxnId"></span></div>
+                    <div class="bg-dark p-3 rounded" style="border: 1px solid rgba(255,255,255,0.05); font-family: monospace; font-size: 13px; max-height: 400px; overflow-y: auto; color: #a5f3fc; white-space: pre-wrap;" id="modalDetailContent"></div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Bootstrap Bundle with Popper -->
@@ -311,7 +335,9 @@
                 
                 const entries = Object.entries(data);
                 if(entries.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Belum ada transaksi</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Belum ada transaksi</td></tr>';
+                    document.getElementById('checkAll').checked = false;
+                    updateDeleteBtn();
                     return;
                 }
 
@@ -324,18 +350,80 @@
                     else if (job.status === 'failed' || job.status === 'error') badgeClass = 'bg-danger';
                     else if (job.status === 'running') badgeClass = 'bg-primary';
                     else if (job.status === 'queued') badgeClass = 'bg-warning text-dark';
+                    
+                    const safeDetail = (job.detail || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 
                     const row = `<tr>
-                        <td class="fw-medium">${txnId}</td>
+                        <td><input type="checkbox" class="form-check-input row-checkbox" value="${txnId}" onchange="updateDeleteBtn()"></td>
+                        <td class="fw-medium text-break" style="max-width:150px;">${txnId}</td>
                         <td><span class="badge ${badgeClass}">${job.status}</span></td>
-                        <td class="text-truncate" style="max-width: 200px;" title="${job.detail}">${job.detail}</td>
                         <td class="small text-muted">${new Date(job.updated_at).toLocaleString()}</td>
+                        <td class="text-end text-nowrap">
+                            <button class="btn btn-sm btn-info text-white" onclick="showJobDetail('${txnId}', '${safeDetail}')" title="Lihat Detail"><i class="fa-solid fa-eye"></i></button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteJob('${txnId}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                        </td>
                     </tr>`;
                     tbody.insertAdjacentHTML('beforeend', row);
                 });
+                updateDeleteBtn();
             } catch(e) {
                 console.error(e);
             }
+        }
+
+        // Functions for Checkboxes & Deletion
+        function toggleCheckAll() {
+            const isChecked = document.getElementById('checkAll').checked;
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(cb => cb.checked = isChecked);
+            updateDeleteBtn();
+        }
+
+        function updateDeleteBtn() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            const btnDelSelected = document.getElementById('btnDeleteSelected');
+            if (checkedBoxes.length > 0) {
+                btnDelSelected.classList.remove('d-none');
+                btnDelSelected.innerHTML = `<i class="fa-solid fa-trash-can"></i> Del Selected (${checkedBoxes.length})`;
+            } else {
+                btnDelSelected.classList.add('d-none');
+                document.getElementById('checkAll').checked = false;
+            }
+        }
+
+        async function deleteJob(txnId) {
+            if(!confirm(`Hapus transaksi ${txnId}?`)) return;
+            try {
+                await fetch(`/api/statuses/${txnId}`, { method: 'DELETE' });
+                fetchJobs();
+            } catch(e) { alert("Error: " + e.message); }
+        }
+
+        async function deleteSelectedJobs() {
+            const checkedBoxes = document.querySelectorAll('.row-checkbox:checked');
+            if(!confirm(`Hapus ${checkedBoxes.length} transaksi yang dipilih?`)) return;
+            
+            for(let cb of checkedBoxes) {
+                try {
+                    await fetch(`/api/statuses/${cb.value}`, { method: 'DELETE' });
+                } catch(e) { console.error(e); }
+            }
+            fetchJobs();
+        }
+
+        async function clearAllJobs() {
+            if(!confirm("Yakin ingin menghapus SELURUH riwayat transaksi?")) return;
+            try {
+                await fetch(`/api/statuses`, { method: 'DELETE' });
+                fetchJobs();
+            } catch(e) { alert("Error: " + e.message); }
+        }
+
+        function showJobDetail(txnId, detailText) {
+            document.getElementById('modalTxnId').textContent = "TXN: " + txnId;
+            document.getElementById('modalDetailContent').textContent = detailText;
+            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            modal.show();
         }
 
         function copyTunnel() {
