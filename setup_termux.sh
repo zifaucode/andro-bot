@@ -50,9 +50,9 @@ pip install python-dotenv
 echo "    > [4/5] Menginstall uvicorn (Digunakan untuk server web aplikasi)..."
 pip install uvicorn
 
-echo "    > [5/5] Menginstall fastapi (Digunakan untuk arsitektur API Bot)..."
+echo "    > [5/5] Menginstall fastapi & python-multipart (Digunakan untuk arsitektur API Bot)..."
 echo "    ⏳ PENTING: Proses instalasi FastAPI biasanya memakan waktu agak lama karena kompilasi 'pydantic'. Jangan ditutup, mohon ditunggu..."
-pip install fastapi
+pip install fastapi python-multipart
 
 # ─── 4. Install Cloudflared ─────────────────────────────────────
 echo ""

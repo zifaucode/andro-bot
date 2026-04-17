@@ -82,7 +82,7 @@ echo "    ⏳ Menunggu Cloudflare URL..."
 
 # Tunggu URL muncul di log (max 30 detik)
 for i in $(seq 1 30); do
-    TUNNEL_URL=$(grep -o 'https://[^ ]*\.trycloudflare\.com' "$CLOUDFLARED_LOG" 2>/dev/null | head -1)
+    TUNNEL_URL=$(grep -o 'https://[^ ]*\.trycloudflare\.com' "$CLOUDFLARED_LOG" 2>/dev/null | grep -v 'api.trycloudflare.com' | head -1)
     if [ -n "$TUNNEL_URL" ]; then
         # Simpan URL ke file agar FastAPI bisa membacanya
         echo "$TUNNEL_URL" > "$TUNNEL_URL_FILE"
