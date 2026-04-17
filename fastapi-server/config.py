@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 _TERMUX_HOME = os.environ.get("HOME", "/data/data/com.termux/files/home")
-_PROJECT_DIR = os.path.join(_TERMUX_HOME, "BOT-ANDRO")
+# Gunakan path dinamis berdasarkan lokasi file ini sendiri, agar tidak bergantung pada nama folder project
+_PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Settings:
