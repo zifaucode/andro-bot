@@ -37,8 +37,9 @@ pkg install -y python git android-tools wget clang make binutils
 echo ""
 echo "[3/6] Install library dependencies Python..."
 
-echo "    > [1/5] Meng-upgrade pip (Package Manager)..."
-pip install --upgrade pip
+echo "    > [1/5] Menyiapkan pip (Package Manager)..."
+# Termux melarang `pip install --upgrade pip`, jadi kita skip langkah upgrade
+python -m ensurepip --upgrade || true
 
 echo "    > [2/5] Menginstall requests (Digunakan untuk menembak API)..."
 pip install requests
