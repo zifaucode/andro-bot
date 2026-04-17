@@ -200,18 +200,26 @@ def get_live_screenshot():
     """
     try:
         serial = _get_device_serial()
-        temp_local = f"/tmp/bot_recorder_{int(time.time())}.png"
+        # Gunakan folder tmp milik Termux, bukan /tmp sistem Android yg tidak bisa diakses
+        termux_prefix = os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
+        temp_local = os.path.join(termux_prefix, "tmp", f"bot_recorder_{int(time.time())}.png")
 
         # screencap ke sdcard
-        subprocess.run(
+        r1 = subprocess.run(
             ["adb", "-s", serial, "shell", "screencap", "-p", _SCREENSHOT_TEMP],
             capture_output=True, timeout=10
         )
+        if r1.returncode != 0:
+            raise RuntimeError(f"screencap gagal: {r1.stderr.decode(errors='ignore')}")
+
         # pull ke Termux temp
-        subprocess.run(
+        r2 = subprocess.run(
             ["adb", "-s", serial, "pull", _SCREENSHOT_TEMP, temp_local],
             capture_output=True, timeout=10
         )
+        if r2.returncode != 0:
+            raise RuntimeError(f"adb pull gagal: {r2.stderr.decode(errors='ignore')}")
+
         # hapus dari sdcard
         subprocess.run(
             ["adb", "-s", serial, "shell", "rm", _SCREENSHOT_TEMP],
