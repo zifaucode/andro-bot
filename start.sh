@@ -73,7 +73,9 @@ sleep 1
 # Simpan output ke file sementara untuk parse URL
 CLOUDFLARED_LOG="$LOG_DIR/cloudflare.log"
 
-nohup cloudflared tunnel --url http://localhost:8000 \
+# Gunakan termux-chroot agar Cloudflared (yang merupakan binary linux standar)
+# bisa meresolve DNS dan membaca file /etc/resolv.conf dengan benar di Android
+nohup termux-chroot cloudflared tunnel --url http://localhost:8000 \
     --no-autoupdate \
     > "$CLOUDFLARED_LOG" 2>&1 &
 CLOUDFLARE_PID=$!

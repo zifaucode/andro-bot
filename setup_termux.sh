@@ -31,7 +31,7 @@ pkg update -y && pkg upgrade -y
 echo ""
 echo "[2/6] Install dependencies sistem Android (Python, Git, ADB, Wget)..."
 # Ditambahkan clang make binutils karena terkadang instalasi library python butuh dicompile di Termux
-pkg install -y python git android-tools wget clang make binutils
+pkg install -y python git android-tools wget clang make binutils proot resolv-conf
 
 # ─── 3. Install Python dependencies ─────────────────────────────
 echo ""
