@@ -324,11 +324,15 @@
             }
         }
 
+        let txData = {};
+
         async function fetchJobs() {
             try {
                 const res = await fetch('/api/statuses');
                 if(!res.ok) return;
                 const data = await res.json();
+                
+                txData = data;
                 
                 const tbody = document.getElementById('jobsTable');
                 tbody.innerHTML = '';
@@ -350,8 +354,6 @@
                     else if (job.status === 'failed' || job.status === 'error') badgeClass = 'bg-danger';
                     else if (job.status === 'running') badgeClass = 'bg-primary';
                     else if (job.status === 'queued') badgeClass = 'bg-warning text-dark';
-                    
-                    const safeDetail = (job.detail || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\n/g, '\\n');
 
                     const row = `<tr>
                         <td><input type="checkbox" class="form-check-input row-checkbox" value="${txnId}" onchange="updateDeleteBtn()"></td>
@@ -359,7 +361,7 @@
                         <td><span class="badge ${badgeClass}">${job.status}</span></td>
                         <td class="small text-muted">${new Date(job.updated_at).toLocaleString()}</td>
                         <td class="text-end text-nowrap">
-                            <button class="btn btn-sm btn-info text-white" onclick="showJobDetail('${txnId}', '${safeDetail}')" title="Lihat Detail"><i class="fa-solid fa-eye"></i></button>
+                            <button class="btn btn-sm btn-info text-white" onclick="showJobDetail('${txnId}')" title="Lihat Detail"><i class="fa-solid fa-eye"></i></button>
                             <button class="btn btn-sm btn-danger" onclick="deleteJob('${txnId}')" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                         </td>
                     </tr>`;
@@ -419,10 +421,14 @@
             } catch(e) { alert("Error: " + e.message); }
         }
 
-        function showJobDetail(txnId, detailText) {
+        function showJobDetail(txnId) {
+            const job = txData[txnId];
+            if(!job) return;
             document.getElementById('modalTxnId').textContent = "TXN: " + txnId;
-            document.getElementById('modalDetailContent').textContent = detailText;
-            const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+            document.getElementById('modalDetailContent').textContent = job.detail || '-';
+            const modalEl = document.getElementById('detailModal');
+            let modal = bootstrap.Modal.getInstance(modalEl);
+            if (!modal) modal = new bootstrap.Modal(modalEl);
             modal.show();
         }
 
