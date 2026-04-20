@@ -125,7 +125,7 @@ def delete_single_job_status(transaction_id: str) -> dict:
 
 
 @router.get("/statuses/{transaction_id}/screenshots", summary="List Screenshots for Job")
-def list_job_screenshots(transaction_id: str, _key: str = Depends(verify_api_key)) -> dict:
+def list_job_screenshots(transaction_id: str) -> dict:
     screenshots_dir = Path(settings.BOT_WORKER_PATH).parent / "output" / "jobs" / transaction_id / "screenshots"
     if not screenshots_dir.exists():
         return {"images": []}
@@ -134,7 +134,7 @@ def list_job_screenshots(transaction_id: str, _key: str = Depends(verify_api_key
 
 
 @router.get("/statuses/{transaction_id}/screenshots/{filename}")
-def get_job_screenshot(transaction_id: str, filename: str, _key: str = Depends(verify_api_key)):
+def get_job_screenshot(transaction_id: str, filename: str):
     target = Path(settings.BOT_WORKER_PATH).parent / "output" / "jobs" / transaction_id / "screenshots" / filename
     if not target.exists() or not target.name.endswith(".png"):
         raise HTTPException(status_code=404, detail="Screenshot not found")
