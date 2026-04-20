@@ -300,7 +300,7 @@
       font-size: 11px;
       color: var(--yellow);
       margin-top: 2px;
-      italic;
+      font-style: italic;
     }
     .step-actions { display: flex; gap: 4px; flex-shrink: 0; }
     .step-btn {
@@ -458,6 +458,9 @@
       <button class="btn btn-ghost" id="btn-swipe-mode" onclick="setMode('swipe')">
         <i class="fa-solid fa-hand"></i> Swipe Mode
       </button>
+      <button class="btn btn-ghost" id="btn-color-mode" onclick="setMode('color')" title="Deteksi pixel warna untuk cek error / popup">
+        <i class="fa-solid fa-eye-dropper"></i> Pick Color
+      </button>
       <button class="btn btn-ghost" onclick="addWait()">
         <i class="fa-solid fa-clock"></i> Wait
       </button>
@@ -583,6 +586,9 @@
         <button class="qa-btn" onclick="showForm('launch_app')">
           <i class="fa-solid fa-rocket" style="color:var(--accent)"></i> Launch App
         </button>
+        <button class="qa-btn" onclick="showForm('check_screen_not')" title="Cek popup error / banner">
+          <i class="fa-solid fa-shield-halved" style="color:var(--red)"></i> Detect Banner (Error)
+        </button>
         <button class="qa-btn" onclick="showForm('check_screen')">
           <i class="fa-solid fa-eye" style="color:var(--yellow)"></i> Check Screen
         </button>
@@ -633,7 +639,7 @@
 // STATE
 // ═══════════════════════════════════════════════════════════
 let steps = [];
-let mode = 'tap'; // 'tap' | 'swipe'
+let mode = 'tap'; // 'tap' | 'swipe' | 'color'
 let deviceW = 1080, deviceH = 1920;
 let currentFormAction = null;
 
@@ -787,19 +793,28 @@ function setMode(m) {
   const wrap = document.getElementById('screen-wrap');
   const tapBtn = document.getElementById('btn-tap-mode');
   const swipeBtn = document.getElementById('btn-swipe-mode');
+  const colorBtn = document.getElementById('btn-color-mode');
+
+  tapBtn.className = 'btn btn-ghost';
+  swipeBtn.className = 'btn btn-ghost';
+  if (colorBtn) colorBtn.className = 'btn btn-ghost';
 
   if (m === 'tap') {
     badge.innerHTML = '<i class="fa-solid fa-hand-pointer"></i> TAP MODE';
     badge.className = 'screen-mode-badge';
     wrap.className = 'screen-wrap';
     tapBtn.className = 'btn btn-primary';
-    swipeBtn.className = 'btn btn-ghost';
-  } else {
+  } else if (m === 'swipe') {
     badge.innerHTML = '<i class="fa-solid fa-hand"></i> SWIPE MODE';
     badge.className = 'screen-mode-badge swipe-mode';
     wrap.className = 'screen-wrap swipe-mode';
-    tapBtn.className = 'btn btn-ghost';
     swipeBtn.className = 'btn btn-success';
+  } else if (m === 'color') {
+    badge.innerHTML = '<i class="fa-solid fa-eye-dropper"></i> COLOR PICKER (Detect Pop-up)';
+    badge.className = 'screen-mode-badge scan-mode';
+    wrap.className = 'screen-wrap scan-mode';
+    colorBtn.className = 'btn btn-warn';
+    toast("Klik area/banner peringatan di layar untuk mengekstrak warna pixel!", 'info');
   }
 }
 
@@ -850,7 +865,7 @@ function getDeviceCoords(event) {
 // TAP HANDLER
 // ═══════════════════════════════════════════════════════════
 function handleScreenClick(event) {
-  if (mode !== 'tap') return;
+  if (mode !== 'tap' && mode !== 'color') return;
   if (document.getElementById('screen-img').style.display === 'none') {
     toast('Refresh screenshot dulu!', 'info');
     return;
@@ -864,7 +879,32 @@ function handleScreenClick(event) {
   // Visual indicator
   showTapIndicator(dispX, dispY);
 
-  // Add step
+  if (mode === 'color') {
+    const img = document.getElementById('screen-img');
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const data = ctx.getImageData(devX, devY, 1, 1).data;
+    const hex = "#" + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + data[2]).toString(16).slice(1).toUpperCase();
+    
+    // Automatically switch to form "check_screen_not" (Detect Banner)
+    showForm('check_screen_not');
+    setTimeout(() => {
+       const fX = document.getElementById('f_x');
+       if(fX) {
+         fX.value = devX;
+         document.getElementById('f_y').value = devY;
+         document.getElementById('f_color').value = hex;
+         toast(`Pixel (${devX},${devY}) memiliki warna ${hex}`, 'success');
+       }
+    }, 150);
+    setMode('tap');
+    return;
+  }
+
+  // Add step tap
   const label = prompt(`Tap di (${devX}, ${devY})\nMasukkan label (opsional):`, `Tap (${devX},${devY})`);
   if (label === null) return; // cancelled
 
@@ -1076,10 +1116,38 @@ const formConfig = {
       { id: 'f_y', label: 'Y pixel', type: 'number', default: '500' },
       { id: 'f_color', label: 'Expected Color (#RRGGBB)', type: 'text', default: '#FFFFFF' },
       { id: 'f_tol', label: 'Tolerance (0-255)', type: 'number', default: '50' },
-      { id: 'f_fail', label: 'Fail Reason', type: 'text', default: 'Kondisi tidak sesuai', span: 2 },
+      { id: 'f_fail', label: 'Fail Reason', type: 'text', default: 'Kondisi layar beda', span: 2 },
       { id: 'f_label', label: 'Label', type: 'text', default: 'Check Screen', span: 2 },
     ],
     build: () => ({ action:'check_screen', x:int('f_x'), y:int('f_y'), expected_color:v('f_color'), tolerance:int('f_tol'), fail_reason:v('f_fail'), label:v('f_label'), on_fail:[] }),
+  },
+  check_screen_not: {
+    title: 'Deteksi Banner / Popup (Check NOT Color)',
+    fields: [
+      { id: 'f_x', label: 'X pixel (Titik Popup)', type: 'number', default: '500' },
+      { id: 'f_y', label: 'Y pixel (Titik Popup)', type: 'number', default: '500' },
+      { id: 'f_color', label: 'Color dari Popup / Error', type: 'text', default: '#FF0000' },
+      { id: 'f_tol', label: 'Tolerance (0-255)', type: 'number', default: '50' },
+      { id: 'f_fail', label: 'Teks Log saat Popup Muncul', type: 'text', default: 'ID Pemain tidak ada!', span: 2 },
+      { id: 'f_action', label: 'Action JIKA Ada Banner/Popup', type: 'select', 
+        options: [{val:'screenshot_abort', text:'Screenshot + Abort'}, {val:'abort', text:'Hanya Abort'}], span: 2 }
+    ],
+    build: () => {
+      let fail_steps = [];
+      if (document.getElementById('f_action').value === 'screenshot_abort') {
+         fail_steps = [{action: 'screenshot', label: 'Auto Screenshot on Error'}];
+      }
+      return { 
+        action: 'check_screen_not', 
+        x: int('f_x'), 
+        y: int('f_y'), 
+        unexpected_color: v('f_color'), 
+        tolerance: int('f_tol'), 
+        fail_reason: v('f_fail'), 
+        label: 'Deteksi Error (' + v('f_fail') + ')', 
+        on_fail: fail_steps 
+      };
+    },
   },
 };
 
@@ -1097,17 +1165,26 @@ function showForm(action) {
   let html = '';
   let row = [];
   cfg.fields.forEach((f, i) => {
-    const spanClass = f.span === 2 ? 'single' : '';
-    if (f.span === 2) {
+    const isSingle = f.span === 2;
+    let inputHtml = "";
+    if (f.type === 'select') {
+      inputHtml = `<select class="field-input" id="${f.id}">` + 
+                  f.options.map(o => `<option value="${o.val}">${o.text}</option>`).join('') +
+                  `</select>`;
+    } else {
+      inputHtml = `<input class="field-input" id="${f.id}" type="${f.type}" value="${f.default}" ${f.step?'step='+f.step:''}/>`;
+    }
+
+    if (isSingle) {
       if (row.length > 0) { html += `<div class="form-row">${row.join('')}</div>`; row = []; }
       html += `<div class="form-row single"><div class="field-group">
         <label class="field-label">${f.label}</label>
-        <input class="field-input" id="${f.id}" type="${f.type}" value="${f.default}" ${f.step?'step='+f.step:''}/>
+        ${inputHtml}
       </div></div>`;
     } else {
       row.push(`<div class="field-group">
         <label class="field-label">${f.label}</label>
-        <input class="field-input" id="${f.id}" type="${f.type}" value="${f.default}" ${f.step?'step='+f.step:''}/>
+        ${inputHtml}
       </div>`);
       if (row.length === 2 || i === cfg.fields.length - 1) {
         html += `<div class="form-row">${row.join('')}</div>`;
