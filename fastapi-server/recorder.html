@@ -1201,8 +1201,10 @@ const formConfig = {
     build: () => {
       let fail_steps = [];
       if (document.getElementById('f_action').value === 'screenshot_abort') {
-         fail_steps = [{action: 'screenshot', label: 'Auto Screenshot on Error'}];
+         fail_steps.push({action: 'screenshot', label: 'Auto Screenshot on Error'});
       }
+      fail_steps.push({action: 'tap', x: 1165, y: 105, label: 'CLOSE X 1'});
+      fail_steps.push({action: 'tap', x: 1243, y: 90, label: 'CLOSE X 2'});
       return { 
         action: 'check_screen_not', 
         x: int('f_x'), 
