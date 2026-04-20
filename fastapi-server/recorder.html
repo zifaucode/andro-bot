@@ -658,8 +658,13 @@ async function loadDeviceInfo() {
       deviceW = d.width;
       deviceH = d.height;
     }
+    // Update text content with current img resolution if available, fallback to api
+    const img = document.getElementById('screen-img');
+    const displayW = (img && img.naturalWidth) ? img.naturalWidth : deviceW;
+    const displayH = (img && img.naturalHeight) ? img.naturalHeight : deviceH;
+    
     document.getElementById('coord-info').textContent =
-      `Resolusi: ${deviceW}×${deviceH}  |  Klik screenshot untuk tambah tap step`;
+      `Resolusi: ${displayW}×${displayH}  |  Klik screenshot untuk tambah tap step`;
   } catch(e) { /* ignore */ }
 }
 
@@ -687,6 +692,11 @@ async function refreshScreen() {
       img.style.display = 'block';
       loading.style.display = 'none';
       btn.disabled = false;
+      // Update resolusi ke layar UI supaya relevan dengan mode landscape/portrait
+      const displayW = img.naturalWidth || deviceW;
+      const displayH = img.naturalHeight || deviceH;
+      document.getElementById('coord-info').textContent = 
+        `Resolusi: ${displayW}×${displayH}  |  Klik screenshot untuk tambah tap step`;
     };
     img.src = objectUrl;
 
@@ -742,6 +752,10 @@ async function delayedCapture(seconds = 5) {
     img.onload = () => {
       placeholder.style.display = 'none';
       img.style.display = 'block';
+      const displayW = img.naturalWidth || deviceW;
+      const displayH = img.naturalHeight || deviceH;
+      document.getElementById('coord-info').textContent = 
+        `Resolusi: ${displayW}×${displayH}  |  Klik screenshot untuk tambah tap step`;
     };
     img.src = objectUrl;
 
@@ -825,9 +839,9 @@ function getDeviceCoords(event) {
   // Out of bounds check
   if (relX < 0 || relY < 0 || relX > dispW || relY > dispH) return null;
 
-  // Scale to device resolution
-  const devX = Math.round((relX / dispW) * deviceW);
-  const devY = Math.round((relY / dispH) * deviceH);
+  // Scale to device resolution (MENGGUNAKAN NATURAL ORIENTATION SESUNGGUHNYA)
+  const devX = Math.round((relX / dispW) * imgNatW);
+  const devY = Math.round((relY / dispH) * imgNatH);
 
   return { devX, devY, dispX: relX + offX, dispY: relY + offY };
 }
@@ -968,26 +982,30 @@ function addKeyAction(action) {
 }
 
 function addDirectionalSwipe(direction) {
-  let cx = Math.round(deviceW / 2);
-  let cy = Math.round(deviceH / 2);
+  const img = document.getElementById('screen-img');
+  const realW = (img && img.naturalWidth) ? img.naturalWidth : deviceW;
+  const realH = (img && img.naturalHeight) ? img.naturalHeight : deviceH;
+
+  let cx = Math.round(realW / 2);
+  let cy = Math.round(realH / 2);
   let x1, y1, x2, y2;
   
   if (direction === 'up') {
     x1 = cx; x2 = cx;
-    y1 = Math.round(deviceH * 0.8);
-    y2 = Math.round(deviceH * 0.2);
+    y1 = Math.round(realH * 0.8);
+    y2 = Math.round(realH * 0.2);
   } else if (direction === 'down') {
     x1 = cx; x2 = cx;
-    y1 = Math.round(deviceH * 0.2);
-    y2 = Math.round(deviceH * 0.8);
+    y1 = Math.round(realH * 0.2);
+    y2 = Math.round(realH * 0.8);
   } else if (direction === 'left') {
     y1 = cy; y2 = cy;
-    x1 = Math.round(deviceW * 0.8);
-    x2 = Math.round(deviceW * 0.2);
+    x1 = Math.round(realW * 0.8);
+    x2 = Math.round(realW * 0.2);
   } else if (direction === 'right') {
     y1 = cy; y2 = cy;
-    x1 = Math.round(deviceW * 0.2);
-    x2 = Math.round(deviceW * 0.8);
+    x1 = Math.round(realW * 0.2);
+    x2 = Math.round(realW * 0.8);
   }
   
   addStep({
