@@ -425,10 +425,29 @@
       }
     }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+    /* ── Modal Load Macro ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; z-index: 10000;
+    }
+    .modal-box {
+      background: #ffffff; width: 400px; max-width: 90%; border-radius: 16px; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; font-weight: 600;}
+    .modal-close { cursor: pointer; color: var(--muted); background: none; border: none; font-size: 16px;}
+    .modal-body { padding: 20px; max-height: 400px; overflow-y: auto;}
+    .macro-load-item {
+      padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s;
+    }
+    .macro-load-item:hover { background: var(--surface2); border-color: var(--accent); }
+    .macro-name { font-weight: 600; font-size: 13px; color: #1e293b;}
+    .macro-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -622,6 +641,9 @@
       <button class="btn btn-ghost" onclick="clearAll()" style="flex:0 0 auto">
         <i class="fa-solid fa-trash"></i>
       </button>
+      <button class="btn btn-ghost" onclick="openLoadModal()" style="flex:0 0 auto" title="Load Macro">
+        <i class="fa-solid fa-folder-open" style="color: var(--accent)"></i>
+      </button>
       <button class="btn btn-warn" onclick="testMacro()" style="flex:1">
         <i class="fa-solid fa-play"></i> Test Run
       </button>
@@ -633,6 +655,19 @@
 </div>
 
 <div class="toast-container" id="toast-container"></div>
+
+<!-- Modal Load Macro -->
+<div class="modal-overlay" id="load-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span><i class="fa-solid fa-folder-open me-2" style="color:var(--accent)"></i> Load Macro Tersimpan</span>
+      <button class="modal-close" onclick="document.getElementById('load-modal').style.display='none'"><i class="fa-solid fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="load-list">
+      <!-- Loaded dynamically -->
+    </div>
+  </div>
+</div>
 
 <script>
 // ═══════════════════════════════════════════════════════════
@@ -1353,6 +1388,55 @@ function clearAll() {
   steps = [];
   renderSteps();
   toast('Steps dihapus', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOAD MACRO
+// ═══════════════════════════════════════════════════════════
+async function openLoadModal() {
+  document.getElementById('load-modal').style.display = 'flex';
+  document.getElementById('load-list').innerHTML = '<div style="text-align:center"><div class="spinner" style="margin: 0 auto;"></div></div>';
+  
+  try {
+    const res = await fetch('/api/macros', { headers: { 'X-API-Key': await getApiKey() }});
+    const d = await res.json();
+    if (!res.ok) throw new Error(d.detail || 'Fetch failed');
+    
+    if (d.count === 0) {
+      document.getElementById('load-list').innerHTML = '<div class="steps-empty">Tidak ada macro tersimpan</div>';
+      return;
+    }
+    
+    document.getElementById('load-list').innerHTML = d.macros.map(m => `
+      <div class="macro-load-item" onclick="loadMacro('${m.name}')">
+        <div>
+          <div class="macro-name">${m.name}</div>
+          <div class="macro-desc">${m.step_count} steps | ${m.description || 'Tanpa deskripsi'}</div>
+        </div>
+        <i class="fa-solid fa-chevron-right" style="color:var(--muted)"></i>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('load-list').innerHTML = `<div class="steps-empty" style="color:var(--red)">${e.message}</div>`;
+  }
+}
+
+async function loadMacro(name) {
+  document.getElementById('load-modal').style.display = 'none';
+  try {
+    const res = await fetch('/api/macros/' + name, { headers: { 'X-API-Key': await getApiKey() }});
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Load failed');
+    
+    document.getElementById('macro-name').value = data.name || name;
+    document.getElementById('macro-desc').value = data.description || '';
+    steps = data.steps || [];
+    renderSteps();
+    switchTab('steps');
+    toast(`Macro "${name}" berhasil diload!`, 'success');
+  } catch(e) {
+    toast('Error memuat: ' + e.message, 'error');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════

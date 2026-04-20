@@ -172,4 +172,6 @@ def check_pixel_not_color(
     Return True jika pixel TIDAK SAMA dengan warna yang diberikan.
     """
     match, detail = check_pixel_color(x, y, unexpected_hex, tolerance, transaction_id)
+    if detail.startswith("Error") or detail.startswith("Gagal"):
+        return False, detail
     return (not match), detail
