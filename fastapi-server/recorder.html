@@ -471,6 +471,10 @@
       <button class="btn btn-warn" id="btn-delayed" onclick="delayedCapture()" title="Pindah ke app lain dulu, screenshot diambil otomatis setelah countdown">
         <i class="fa-solid fa-camera"></i> Capture 5s
       </button>
+      <button class="btn btn-ghost" onclick="document.getElementById('upload-screen-input').click()" title="Unggah Screenshot manual dari komputer">
+        <i class="fa-solid fa-upload"></i> Upload SS
+      </button>
+      <input type="file" id="upload-screen-input" accept="image/png, image/jpeg" style="display:none" onchange="loadLocalImage(event)" />
       <button class="btn btn-ghost" id="btn-tap-mode" onclick="setMode('tap')">
         <i class="fa-solid fa-hand-pointer"></i> Tap Mode
       </button>
@@ -748,6 +752,33 @@ async function refreshScreen() {
     btn.disabled = false;
     toast('Gagal ambil screenshot: ' + e.message, 'error');
   }
+}
+
+function loadLocalImage(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const img = document.getElementById('screen-img');
+  
+  img.onload = () => {
+    document.getElementById('screen-placeholder').style.display = 'none';
+    img.style.display = 'block';
+    
+    // Update resolusi ke layar UI berdasarkan foto yg diupload
+    const displayW = img.naturalWidth || deviceW;
+    const displayH = img.naturalHeight || deviceH;
+    document.getElementById('coord-info').textContent = 
+      `Resolusi: ${displayW}×${displayH}  |  Upload Berhasil! (Klik Pick Color)`;
+      
+    toast('Screenshot dari komputer termuat!', 'success');
+  };
+  img.onerror = () => {
+    toast('Gagal memuat gambar', 'error');
+  };
+  img.src = url;
+  
+  // reset supaya bisa pilih file yg sama lagi
+  event.target.value = '';
 }
 
 // ── Delayed Screenshot (Countdown) ──
