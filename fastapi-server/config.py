@@ -49,5 +49,8 @@ class Settings:
     # File penyimpan URL tunnel aktif (dibaca oleh dashboard)
     TUNNEL_URL_FILE: str = os.path.join(_PROJECT_DIR, "fastapi-server", "tunnel_url.txt")
 
+    # Worker timeout (detik) — harus >= TASK_TIMEOUT di bot-worker/.env
+    TASK_TIMEOUT: int = int(os.getenv("TASK_TIMEOUT", "300"))
+
 
 settings = Settings()

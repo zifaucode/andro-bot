@@ -16,9 +16,11 @@ from pathlib import Path
 from typing import Any
 import subprocess
 import dotenv
+import requests
+from urllib.parse import urlparse
 
-from fastapi import APIRouter, Body, Depends, Header, HTTPException, status, Request
-from fastapi.responses import Response
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status, Request, UploadFile, File
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel, Field
 
 import bot_trigger
@@ -188,7 +190,7 @@ def get_tunnel_url() -> dict:
 # ── Live Screenshot (untuk Macro Recorder) ───────────────────────────────────
 
 DEVICE_SERIAL = os.getenv("DEVICE_SERIAL", "127.0.0.1:5555")
-_SCREENSHOT_TEMP = "/sdcard/bot_recorder_temp.png"
+_SCREENSHOT_TEMP = "/data/local/tmp/bot_recorder_temp.png"
 
 
 def _get_device_serial() -> str:
@@ -221,7 +223,7 @@ def get_live_screenshot():
         termux_prefix = os.environ.get("PREFIX", "/data/data/com.termux/files/usr")
         temp_local = os.path.join(termux_prefix, "tmp", f"bot_recorder_{int(time.time())}.png")
 
-        # screencap ke sdcard
+        # screencap ke device tmp
         r1 = subprocess.run(
             ["adb", "-s", serial, "shell", "screencap", "-p", _SCREENSHOT_TEMP],
             capture_output=True, timeout=10
@@ -237,9 +239,9 @@ def get_live_screenshot():
         if r2.returncode != 0:
             raise RuntimeError(f"adb pull gagal: {r2.stderr.decode(errors='ignore')}")
 
-        # hapus dari sdcard
+        # hapus dari device tmp
         subprocess.run(
-            ["adb", "-s", serial, "shell", "rm", _SCREENSHOT_TEMP],
+            ["adb", "-s", serial, "shell", "rm", "-f", _SCREENSHOT_TEMP],
             capture_output=True, timeout=5
         )
 
@@ -285,7 +287,7 @@ def get_delayed_screenshot(seconds: int = 5):
             raise RuntimeError(f"adb pull gagal: {r2.stderr.decode(errors='ignore')}")
 
         subprocess.run(
-            ["adb", "-s", serial, "shell", "rm", _SCREENSHOT_TEMP],
+            ["adb", "-s", serial, "shell", "rm", "-f", _SCREENSHOT_TEMP],
             capture_output=True, timeout=5
         )
 
@@ -441,6 +443,72 @@ def delete_macro(name: str, _key: str = Depends(verify_api_key)) -> dict:
     return {"success": True, "message": f"Macro '{name}' dihapus"}
 
 
+@router.get("/macros/backup", summary="Download All Macros Backup")
+def download_macros_backup(_key: str = Depends(verify_api_key)) -> StreamingResponse:
+    """Download semua macro sebagai ZIP file."""
+    import io, zipfile
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        for f in sorted(MACROS_DIR.glob("*.json")):
+            zf.write(str(f), arcname=f.name)
+    buf.seek(0)
+    return StreamingResponse(
+        buf,
+        media_type="application/zip",
+        headers={"Content-Disposition": "attachment; filename=macros_backup.zip"},
+    )
+
+
+@router.post("/macros/restore", summary="Restore Macros from ZIP")
+async def restore_macros_backup(
+    file: UploadFile = File(...),
+    overwrite: bool = True,
+    _key: str = Depends(verify_api_key),
+) -> dict:
+    """Restore macro dari ZIP upload. Setiap .json di dalam ZIP akan diekstrak ke macros/."""
+    import zipfile, tempfile, shutil
+    if not file.filename or not file.filename.endswith(".zip"):
+        raise HTTPException(status_code=400, detail="File harus berupa ZIP")
+
+    restored: list[str] = []
+    skipped: list[str] = []
+    errors: list[str] = []
+
+    MACROS_DIR.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_zip = Path(tmpdir) / "upload.zip"
+        with tmp_zip.open("wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        try:
+            with zipfile.ZipFile(tmp_zip, "r") as zf:
+                for member in zf.namelist():
+                    if member.endswith(".json") and not member.startswith("__MACOSX") and not member.startswith("."):
+                        name = Path(member).name
+                        target = MACROS_DIR / name
+                        if target.exists() and not overwrite:
+                            skipped.append(name)
+                            continue
+                        try:
+                            data = zf.read(member)
+                            json.loads(data)  # validate JSON
+                            target.write_bytes(data)
+                            restored.append(name)
+                        except Exception as e:
+                            errors.append(f"{name}: {e}")
+        except zipfile.BadZipFile:
+            raise HTTPException(status_code=400, detail="File ZIP tidak valid")
+
+    return {
+        "success": True,
+        "restored": restored,
+        "skipped": skipped,
+        "errors": errors,
+        "message": f"{len(restored)} macro restored, {len(skipped)} skipped, {len(errors)} error",
+    }
+
+
 # ── System / Setup ────────────────────────────────────────────────────────────
 
 FASTAPI_ENV_PATH = Path(settings.BOT_WORKER_PATH).parent.parent / "fastapi-server" / ".env"
@@ -524,3 +592,110 @@ def stop_bot(
         return {"success": True, "message": "Bot process telah dihentikan."}
     except Exception as e:
          return {"success": False, "message": str(e)}
+
+
+# ── Target Server Settings (Update URL) ───────────────────────────────────────
+
+class TargetServerConfig(BaseModel):
+    device_id: str = Field(default="", min_length=0, max_length=200)
+    target_server_url: str = Field(default="", min_length=0, max_length=500)
+    target_api_secret: str = Field(default="", min_length=0, max_length=500)
+
+
+@router.get("/settings/target-server", summary="Get Target Server Config")
+def get_target_server_config(_key: str = Depends(verify_api_key)) -> dict:
+    """Baca konfigurasi target server dari bot-worker/.env"""
+    worker_env = Path(settings.BOT_WORKER_PATH).parent / ".env"
+    values = dotenv.dotenv_values(worker_env)
+    return {
+        "device_id": values.get("DEVICE_ID", ""),
+        "target_server_url": values.get("TARGET_SERVER_URL", ""),
+        "target_api_secret": values.get("TARGET_API_SECRET", ""),
+    }
+
+
+@router.post("/settings/target-server", summary="Save Target Server Config")
+def save_target_server_config(
+    body: TargetServerConfig,
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    """Simpan konfigurasi target server ke bot-worker/.env"""
+    worker_env = Path(settings.BOT_WORKER_PATH).parent / ".env"
+    worker_env.parent.mkdir(parents=True, exist_ok=True)
+    if not worker_env.exists():
+        worker_env.write_text("", encoding="utf-8")
+
+    dotenv.set_key(str(worker_env), "DEVICE_ID", body.device_id)
+    dotenv.set_key(str(worker_env), "TARGET_SERVER_URL", body.target_server_url)
+    dotenv.set_key(str(worker_env), "TARGET_API_SECRET", body.target_api_secret)
+
+    return {"success": True, "message": "Konfigurasi target server berhasil disimpan."}
+
+
+@router.post("/settings/update-url", summary="Update URL to Target Server")
+def update_url_to_target_server(
+    _key: str = Depends(verify_api_key)
+) -> dict:
+    """
+    Baca DEVICE_ID, TARGET_SERVER_URL, TARGET_API_SECRET dari .env,
+    baca tunnel URL aktif, lalu POST ke target server.
+    """
+    worker_env = Path(settings.BOT_WORKER_PATH).parent / ".env"
+    values = dotenv.dotenv_values(worker_env)
+
+    device_id = values.get("DEVICE_ID", "").strip()
+    target_url = values.get("TARGET_SERVER_URL", "").strip()
+    api_secret = values.get("TARGET_API_SECRET", "").strip()
+
+    if not target_url:
+        raise HTTPException(status_code=400, detail="Target server URL belum diatur. Simpan konfigurasi dulu.")
+    if not device_id:
+        raise HTTPException(status_code=400, detail="Device ID belum diatur. Simpan konfigurasi dulu.")
+    if not api_secret:
+        raise HTTPException(status_code=400, detail="API Secret belum diatur. Simpan konfigurasi dulu.")
+
+    # Validasi URL
+    parsed = urlparse(target_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise HTTPException(status_code=400, detail="Target server URL tidak valid.")
+
+    # Baca tunnel URL aktif
+    tunnel_file = Path(settings.TUNNEL_URL_FILE)
+    tunnel_url = ""
+    if tunnel_file.exists():
+        tunnel_url = tunnel_file.read_text(encoding="utf-8").strip()
+
+    # Ambil URL tunnel terbaru / yang sedang eksis, fallback ke local URL
+    url_update = tunnel_url if tunnel_url else f"http://{settings.HOST}:{settings.PORT}"
+
+    payload = {
+        "device_id": device_id,
+        "url_update": url_update,
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-API-SECRET": api_secret,
+    }
+
+    try:
+        resp = requests.post(target_url, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        return {
+            "success": True,
+            "message": "URL berhasil di-update ke target server.",
+            "target_response": resp.text,
+            "status_code": resp.status_code,
+        }
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Request ke target server timeout.")
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=502, detail="Tidak bisa terkoneksi ke target server.")
+    except requests.exceptions.HTTPError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Target server merespons error: HTTP {exc.response.status_code} - {exc.response.text}"
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Gagal mengirim ke target server: {str(exc)}")

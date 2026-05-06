@@ -116,18 +116,19 @@ def _queue_worker() -> None:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=settings.TASK_TIMEOUT if hasattr(settings, 'TASK_TIMEOUT') else 300,
+                timeout=getattr(settings, 'TASK_TIMEOUT', 300),
             )
             if result.returncode == 0:
-                _update_status(transaction_id, "done", result.stdout.strip()[-500:])
+                _update_status(transaction_id, "done", result.stdout.strip()[-2000:])
             elif result.returncode == 2:
-                _update_status(transaction_id, "failed", result.stdout.strip()[-500:] or "Macro aborted")
+                _update_status(transaction_id, "failed", result.stdout.strip()[-2000:] or "Macro aborted")
             else:
-                _update_status(transaction_id, "error", result.stderr.strip()[-500:] or "Worker error")
+                stderr_detail = result.stderr.strip() or result.stdout.strip()
+                _update_status(transaction_id, "error", stderr_detail[-2000:] or "Worker error")
         except subprocess.TimeoutExpired:
-            _update_status(transaction_id, "timeout", "Worker exceeded time limit")
+            _update_status(transaction_id, "timeout", f"Worker exceeded {getattr(settings, 'TASK_TIMEOUT', 300)}s time limit")
         except Exception as exc:
-            _update_status(transaction_id, "error", str(exc))
+            _update_status(transaction_id, "error", f"Exception: {exc}")
         finally:
             _job_queue.task_done()
 

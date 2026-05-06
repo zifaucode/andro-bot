@@ -1,240 +1,438 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="id" data-bs-theme="light">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BOT-ANDRO - Settings</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    />
+
     <style>
-        :root {
-            --bg-color: #f8fafc;
-            --glass-bg: #ffffff;
-            --glass-border: rgba(0, 0, 0, 0.08);
-            --primary-accent: #6366f1;
-            --text-main: #334155;
-            --text-muted: #64748b;
-        }
+      :root {
+        --bg-color: #f8fafc;
+        --glass-bg: #ffffff;
+        --glass-border: rgba(0, 0, 0, 0.08);
+        --primary-accent: #6366f1;
+        --text-main: #334155;
+        --text-muted: #64748b;
+      }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-        }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        min-height: 100vh;
+      }
 
-        .navbar {
-            background: #ffffff !important;
-            border-bottom: 1px solid var(--glass-border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        }
-        
-        .container-main {
-            max-width: 900px;
-            margin: 40px auto;
-        }
+      .navbar {
+        background: #ffffff !important;
+        border-bottom: 1px solid var(--glass-border);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
 
-        .settings-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-            margin-bottom: 24px;
-        }
+      .container-main {
+        max-width: 900px;
+        margin: 40px auto;
+      }
 
-        .section-title {
-            color: #1e293b;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            color: var(--primary-accent);
-            margin-right: 12px;
-        }
+      .settings-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        margin-bottom: 24px;
+      }
 
-        .form-control {
-            background-color: #f1f5f9;
-            border: 1px solid #e2e8f0;
-            color: #334155;
-            padding: 10px 16px;
-            border-radius: 10px;
-        }
+      .section-title {
+        color: #1e293b;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+      }
 
-        .form-control:focus {
-            background-color: #ffffff;
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-            color: #334155;
-        }
+      .section-title i {
+        color: var(--primary-accent);
+        margin-right: 12px;
+      }
 
-        .form-label {
-            font-weight: 500;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
+      .form-control {
+        background-color: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        padding: 10px 16px;
+        border-radius: 10px;
+      }
 
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-accent), #2563eb);
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-        }
+      .form-control:focus {
+        background-color: #ffffff;
+        border-color: var(--primary-accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        color: #334155;
+      }
+
+      .form-label {
+        font-weight: 500;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--primary-accent), #2563eb);
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <nav class="navbar navbar-expand-lg navbar-light sticky-top">
-        <div class="container-fluid px-4">
-            <a class="navbar-brand d-flex align-items-center text-dark" href="/dashboard">
-                <i class="fa-brands fa-android text-success me-2 fs-4"></i>
-                <span class="fw-bold fs-5">BOT-ANDRO Settings</span>
-            </a>
-            <div class="ms-auto d-flex gap-2">
-                <a href="/dashboard" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-gauge me-1"></i> Dashboard</a>
-                <a href="/logout" class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-power-off"></i></a>
-            </div>
+      <div class="container-fluid px-4">
+        <a
+          class="navbar-brand d-flex align-items-center text-dark"
+          href="/dashboard"
+        >
+          <i class="fa-brands fa-android text-success me-2 fs-4"></i>
+          <span class="fw-bold fs-5">BOT-ANDRO Settings</span>
+        </a>
+        <div class="ms-auto d-flex gap-2">
+          <a href="/dashboard" class="btn btn-outline-secondary btn-sm"
+            ><i class="fa-solid fa-gauge me-1"></i> Dashboard</a
+          >
+          <a href="/logout" class="btn btn-outline-danger btn-sm"
+            ><i class="fa-solid fa-power-off"></i
+          ></a>
         </div>
+      </div>
     </nav>
 
     <div class="container container-main">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3 class="mb-0">Konfigurasi Sistem</h3>
-            <button class="btn btn-primary" onclick="saveConfig()" id="btnSave">
-                <i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0">Konfigurasi Sistem</h3>
+        <button class="btn btn-primary" onclick="saveConfig()" id="btnSave">
+          <i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan
+        </button>
+      </div>
+
+      <!-- FASTAPI SERVER CONF -->
+      <div class="settings-card">
+        <div class="section-title">
+          <i class="fa-solid fa-server"></i> Server FastAPI (App)
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">API Key</label>
+            <input type="text" class="form-control" id="f_API_KEY" />
+            <div class="form-text text-muted small">
+              Harus sama dengan di Laravel.
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Dashboard Password</label>
+            <input type="text" class="form-control" id="f_DASHBOARD_PASS" />
+            <div class="form-text text-muted small">Password login panel.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Port API (Local)</label>
+            <input type="number" class="form-control" id="f_PORT" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Cloudflare URL</label>
+            <input
+              type="text"
+              class="form-control"
+              id="f_CLOUDFLARE_URL"
+              disabled
+            />
+            <div class="form-text text-muted small">Di-generate otomatis.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOT WORKER CONF -->
+      <div class="settings-card">
+        <div class="section-title">
+          <i class="fa-solid fa-robot"></i> Bot Worker Configurations
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">Device Serial / ADB Port</label>
+            <input type="text" class="form-control" id="w_DEVICE_SERIAL" />
+            <div class="form-text text-muted small">Contoh: 127.0.0.1:5555</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Task Timeout (Detik)</label>
+            <input type="number" class="form-control" id="w_TASK_TIMEOUT" />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Action Delay (Detik)</label>
+            <input
+              type="text"
+              class="form-control"
+              id="w_ACTION_DELAY"
+              placeholder="1.0"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- TARGET SERVER / UPDATE URL -->
+      <div class="settings-card">
+        <div
+          class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2"
+        >
+          <div class="section-title mb-0">
+            <i class="fa-solid fa-globe"></i> Update URL ke Server Tujuan
+          </div>
+          <button
+            class="btn btn-success"
+            onclick="updateUrlToTarget()"
+            id="btnUpdateUrl"
+          >
+            <i class="fa-solid fa-paper-plane me-2"></i> Update URL
+          </button>
+        </div>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <label class="form-label">ID Device</label>
+            <input
+              type="text"
+              class="form-control"
+              id="t_DEVICE_ID"
+              placeholder="my_device_01"
+            />
+            <div class="form-text text-muted small">
+              ID unik device untuk didaftarkan ke server tujuan.
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">URL Website Tujuan (Endpoint POST)</label>
+            <input
+              type="text"
+              class="form-control"
+              id="t_TARGET_SERVER_URL"
+              placeholder="https://example.com/api/device/update"
+            />
+            <div class="form-text text-muted small">
+              Endpoint yang menerima POST update URL / data device.
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">API Secret Key Website Tujuan</label>
+            <input
+              type="password"
+              class="form-control"
+              id="t_TARGET_API_SECRET"
+              placeholder="rahasia_api_key"
+            />
+            <div class="form-text text-muted small">
+              Header X-API-Secret yang dikirim ke server tujuan.
+            </div>
+          </div>
+          <div class="col-md-6 d-flex align-items-end">
+            <button
+              class="btn btn-primary w-100"
+              onclick="saveTargetConfig()"
+              id="btnSaveTarget"
+            >
+              <i class="fa-solid fa-floppy-disk me-2"></i> Simpan Setting Target
             </button>
+          </div>
         </div>
-
-        <!-- FASTAPI SERVER CONF -->
-        <div class="settings-card">
-            <div class="section-title"><i class="fa-solid fa-server"></i> Server FastAPI (App)</div>
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label class="form-label">API Key</label>
-                    <input type="text" class="form-control" id="f_API_KEY">
-                    <div class="form-text text-muted small">Harus sama dengan di Laravel.</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Dashboard Password</label>
-                    <input type="text" class="form-control" id="f_DASHBOARD_PASS">
-                    <div class="form-text text-muted small">Password login panel.</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Port API (Local)</label>
-                    <input type="number" class="form-control" id="f_PORT">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Cloudflare URL</label>
-                    <input type="text" class="form-control" id="f_CLOUDFLARE_URL" disabled>
-                    <div class="form-text text-muted small">Di-generate otomatis.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- BOT WORKER CONF -->
-        <div class="settings-card">
-            <div class="section-title"><i class="fa-solid fa-robot"></i> Bot Worker Configurations</div>
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <label class="form-label">Device Serial / ADB Port</label>
-                    <input type="text" class="form-control" id="w_DEVICE_SERIAL">
-                    <div class="form-text text-muted small">Contoh: 127.0.0.1:5555</div>
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Task Timeout (Detik)</label>
-                    <input type="number" class="form-control" id="w_TASK_TIMEOUT">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Action Delay (Detik)</label>
-                    <input type="text" class="form-control" id="w_ACTION_DELAY" placeholder="1.0">
-                </div>
-            </div>
-        </div>
+        <div id="targetFeedback" class="alert mt-3 d-none" role="alert"></div>
+      </div>
     </div>
 
     <script>
-        const apiKey = localStorage.getItem("temp_api_key") || "ganti_dengan_api_key_rahasia"; // We need to grab this from a secured cookie or fallback
-        
-        async function fetchConfig() {
-            try {
-                // Actually the API doesn't need API key if we send it loosely or we can retrieve it safely since user is authenticated by cookie.
-                // Oh wait, /api/system/config is secured by verify_api_key. 
-                // We'll instruct the user to use standard frontend flow, BUT wait, user in dashboard has cookie.
-                // Let's modify verify_api_key to allow cookie fallback for `/system/` routes, or just fetch it here with a placeholder.
-                
-                const res = await fetch('/api/system/config?web=1'); // I'll modify the backend to accept cookie for dashboard use
-                if (!res.ok) {
-                    showToast("Gagal mengambil konfigurasi", "error");
-                    return;
-                }
-                const data = await res.json();
-                
-                // Populate FastAPI
-                document.getElementById('f_API_KEY').value = data.fastapi.API_KEY || '';
-                document.getElementById('f_DASHBOARD_PASS').value = data.fastapi.DASHBOARD_PASS || '';
-                document.getElementById('f_PORT').value = data.fastapi.PORT || '';
-                document.getElementById('f_CLOUDFLARE_URL').value = data.fastapi.CLOUDFLARE_URL || '';
-                
-                // Populate Worker
-                document.getElementById('w_DEVICE_SERIAL').value = data.worker.DEVICE_SERIAL || '';
-                document.getElementById('w_TASK_TIMEOUT').value = data.worker.TASK_TIMEOUT || '';
-                document.getElementById('w_ACTION_DELAY').value = data.worker.ACTION_DELAY || '';
-                
-            } catch(e) {
-                console.error(e);
-            }
+      const apiKey =
+        localStorage.getItem("temp_api_key") || "ganti_dengan_api_key_rahasia"; // We need to grab this from a secured cookie or fallback
+
+      async function fetchConfig() {
+        try {
+          // Actually the API doesn't need API key if we send it loosely or we can retrieve it safely since user is authenticated by cookie.
+          // Oh wait, /api/system/config is secured by verify_api_key.
+          // We'll instruct the user to use standard frontend flow, BUT wait, user in dashboard has cookie.
+          // Let's modify verify_api_key to allow cookie fallback for `/system/` routes, or just fetch it here with a placeholder.
+
+          const res = await fetch("/api/system/config?web=1"); // I'll modify the backend to accept cookie for dashboard use
+          if (!res.ok) {
+            showToast("Gagal mengambil konfigurasi", "error");
+            return;
+          }
+          const data = await res.json();
+
+          // Populate FastAPI
+          document.getElementById("f_API_KEY").value =
+            data.fastapi.API_KEY || "";
+          document.getElementById("f_DASHBOARD_PASS").value =
+            data.fastapi.DASHBOARD_PASS || "";
+          document.getElementById("f_PORT").value = data.fastapi.PORT || "";
+          document.getElementById("f_CLOUDFLARE_URL").value =
+            data.fastapi.CLOUDFLARE_URL || "";
+
+          // Populate Worker
+          document.getElementById("w_DEVICE_SERIAL").value =
+            data.worker.DEVICE_SERIAL || "";
+          document.getElementById("w_TASK_TIMEOUT").value =
+            data.worker.TASK_TIMEOUT || "";
+          document.getElementById("w_ACTION_DELAY").value =
+            data.worker.ACTION_DELAY || "";
+        } catch (e) {
+          console.error(e);
         }
+      }
 
-        async function saveConfig() {
-            const btn = document.getElementById('btnSave');
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i> Menyimpan...';
-            btn.disabled = true;
+      async function saveConfig() {
+        const btn = document.getElementById("btnSave");
+        btn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin me-2"></i> Menyimpan...';
+        btn.disabled = true;
 
-            const payload = {
-                fastapi: {
-                    API_KEY: document.getElementById('f_API_KEY').value,
-                    DASHBOARD_PASS: document.getElementById('f_DASHBOARD_PASS').value,
-                    PORT: document.getElementById('f_PORT').value,
-                },
-                worker: {
-                    DEVICE_SERIAL: document.getElementById('w_DEVICE_SERIAL').value,
-                    TASK_TIMEOUT: document.getElementById('w_TASK_TIMEOUT').value,
-                    ACTION_DELAY: document.getElementById('w_ACTION_DELAY').value,
-                }
-            };
+        const payload = {
+          fastapi: {
+            API_KEY: document.getElementById("f_API_KEY").value,
+            DASHBOARD_PASS: document.getElementById("f_DASHBOARD_PASS").value,
+            PORT: document.getElementById("f_PORT").value,
+          },
+          worker: {
+            DEVICE_SERIAL: document.getElementById("w_DEVICE_SERIAL").value,
+            TASK_TIMEOUT: document.getElementById("w_TASK_TIMEOUT").value,
+            ACTION_DELAY: document.getElementById("w_ACTION_DELAY").value,
+          },
+        };
 
-            try {
-                const res = await fetch('/api/system/config?web=1', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (res.ok) {
-                    alert("Berhasil disimpan!");
-                } else {
-                    alert("Gagal menyimpan!");
-                }
-            } catch (err) {
-                alert("Error: " + err.message);
-            } finally {
-                btn.innerHTML = '<i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan';
-                btn.disabled = false;
-            }
+        try {
+          const res = await fetch("/api/system/config?web=1", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (res.ok) {
+            alert("Berhasil disimpan!");
+          } else {
+            alert("Gagal menyimpan!");
+          }
+        } catch (err) {
+          alert("Error: " + err.message);
+        } finally {
+          btn.innerHTML =
+            '<i class="fa-solid fa-floppy-disk me-2"></i> Simpan Perubahan';
+          btn.disabled = false;
         }
+      }
 
-        window.onload = fetchConfig;
+      async function fetchTargetConfig() {
+        try {
+          const res = await fetch("/api/settings/target-server?web=1");
+          if (!res.ok) return;
+          const data = await res.json();
+          document.getElementById("t_DEVICE_ID").value = data.device_id || "";
+          document.getElementById("t_TARGET_SERVER_URL").value =
+            data.target_server_url || "";
+          document.getElementById("t_TARGET_API_SECRET").value =
+            data.target_api_secret || "";
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      async function saveTargetConfig() {
+        const btn = document.getElementById("btnSaveTarget");
+        btn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin me-2"></i> Menyimpan...';
+        btn.disabled = true;
+
+        const payload = {
+          device_id: document.getElementById("t_DEVICE_ID").value,
+          target_server_url: document.getElementById("t_TARGET_SERVER_URL")
+            .value,
+          target_api_secret: document.getElementById("t_TARGET_API_SECRET")
+            .value,
+        };
+
+        try {
+          const res = await fetch("/api/settings/target-server?web=1", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          showTargetFeedback(
+            res.ok
+              ? "Konfigurasi target server berhasil disimpan."
+              : "Gagal menyimpan konfigurasi target server.",
+            res.ok ? "success" : "danger",
+          );
+        } catch (err) {
+          showTargetFeedback("Error: " + err.message, "danger");
+        } finally {
+          btn.innerHTML =
+            '<i class="fa-solid fa-floppy-disk me-2"></i> Simpan Setting Target';
+          btn.disabled = false;
+        }
+      }
+
+      async function updateUrlToTarget() {
+        const btn = document.getElementById("btnUpdateUrl");
+        btn.innerHTML =
+          '<i class="fa-solid fa-spinner fa-spin me-2"></i> Mengirim...';
+        btn.disabled = true;
+
+        try {
+          const res = await fetch("/api/settings/update-url?web=1", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showTargetFeedback(
+              "URL berhasil di-update ke server tujuan! Response: " +
+                (data.target_response || "OK"),
+              "success",
+            );
+          } else {
+            showTargetFeedback(
+              "Gagal: " + (data.detail || "Unknown error"),
+              "danger",
+            );
+          }
+        } catch (err) {
+          showTargetFeedback("Error: " + err.message, "danger");
+        } finally {
+          btn.innerHTML =
+            '<i class="fa-solid fa-paper-plane me-2"></i> Update URL';
+          btn.disabled = false;
+        }
+      }
+
+      function showTargetFeedback(msg, type) {
+        const el = document.getElementById("targetFeedback");
+        el.className = "alert mt-3 alert-" + type;
+        el.textContent = msg;
+        el.classList.remove("d-none");
+      }
+
+      window.onload = function () {
+        fetchConfig();
+        fetchTargetConfig();
+      };
     </script>
-</body>
+  </body>
 </html>

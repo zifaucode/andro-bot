@@ -38,6 +38,10 @@ def capture_screen(
     save_dir = get_screenshots_dir(transaction_id)
     save_path = str(save_dir / filename)
 
-    device.get_screenshot(save_path=save_path)
-    logger.info(f"[{transaction_id}] Screenshot captured: {filename}")
+    result = device.get_screenshot(save_path=save_path)
+    if result is None:
+        logger.error(f"[{transaction_id}] Screenshot GAGAL: {filename}")
+        folder_manager.write_log(transaction_id, f"ERROR: Screenshot gagal: {filename}")
+    else:
+        logger.info(f"[{transaction_id}] Screenshot captured: {filename}")
     return save_path

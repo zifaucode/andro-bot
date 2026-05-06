@@ -35,5 +35,10 @@ class WorkerSettings:
     TASK_TIMEOUT: int = int(os.getenv("TASK_TIMEOUT", "300"))
     ACTION_DELAY: float = float(os.getenv("ACTION_DELAY", "1.0"))
 
+    # Target Server (untuk update URL / store data ke website tujuan)
+    DEVICE_ID: str = os.getenv("DEVICE_ID", "")
+    TARGET_SERVER_URL: str = os.getenv("TARGET_SERVER_URL", "")
+    TARGET_API_SECRET: str = os.getenv("TARGET_API_SECRET", "")
+
 
 settings = WorkerSettings()
