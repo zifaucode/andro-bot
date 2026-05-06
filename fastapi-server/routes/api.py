@@ -400,6 +400,70 @@ def list_macros(_key: str = Depends(verify_api_key)) -> dict:
     return {"macros": macros, "count": len(macros)}
 
 
+@router.get("/macros/backup", summary="Download Single Macro as JSON")
+def download_single_macro(name: str, _key: str = Depends(verify_api_key)) -> StreamingResponse:
+    """Download satu macro sebagai file JSON berdasarkan nama."""
+    path = MACROS_DIR / f"{name}.json"
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Macro '{name}' tidak ditemukan")
+    content = path.read_text(encoding="utf-8")
+    return StreamingResponse(
+        io.BytesIO(content.encode("utf-8")),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{name}.json"'},
+    )
+
+
+@router.post("/macros/restore", summary="Restore Macro from JSON")
+async def restore_single_macro(
+    file: UploadFile = File(...),
+    _key: str = Depends(verify_api_key),
+) -> dict:
+    """Restore / upload macro dari file JSON. Kalau nama sudah ada, auto-rename jadi 'nama (1).json'."""
+    if not file.filename or not file.filename.endswith(".json"):
+        raise HTTPException(status_code=400, detail="File harus berupa JSON")
+
+    try:
+        content = await file.read()
+        data = json.loads(content.decode("utf-8"))
+
+        if not isinstance(data, dict):
+            raise HTTPException(status_code=400, detail="File macro harus berupa JSON object")
+
+        # Dukung format single macro langsung {...} atau format { "nama": {...} }
+        if "steps" in data:
+            macro_data = data
+            name = data.get("name", Path(file.filename).stem)
+        else:
+            first_key = next(iter(data.keys()))
+            macro_data = data[first_key]
+            name = first_key
+
+        if not isinstance(macro_data, dict) or "steps" not in macro_data:
+            raise HTTPException(status_code=400, detail="Macro harus memiliki field 'steps'")
+
+        MACROS_DIR.mkdir(parents=True, exist_ok=True)
+
+        target = MACROS_DIR / f"{name}.json"
+        if target.exists():
+            counter = 1
+            while True:
+                new_name = f"{name} ({counter}).json"
+                new_target = MACROS_DIR / new_name
+                if not new_target.exists():
+                    target = new_target
+                    name = f"{name} ({counter})"
+                    break
+                counter += 1
+
+        target.write_text(json.dumps(macro_data, indent=2, ensure_ascii=False), encoding="utf-8")
+        return {"success": True, "message": f"Macro '{name}' berhasil di-restore.", "file": str(target)}
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="File JSON tidak valid")
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Error restore: {exc}")
+
+
 @router.get("/macros/{name}", summary="Get Macro Detail")
 def get_macro(name: str, _key: str = Depends(verify_api_key)) -> dict:
     path = MACROS_DIR / f"{name}.json"
@@ -442,73 +506,6 @@ def delete_macro(name: str, _key: str = Depends(verify_api_key)) -> dict:
         raise HTTPException(status_code=404, detail=f"Macro '{name}' tidak ditemukan")
     path.unlink()
     return {"success": True, "message": f"Macro '{name}' dihapus"}
-
-
-@router.get("/macros/backup", summary="Download All Macros Backup (JSON)")
-def download_macros_backup_json(_key: str = Depends(verify_api_key)) -> StreamingResponse:
-    """Download semua macro sebagai single JSON file."""
-    macros: dict[str, dict] = {}
-    for f in sorted(MACROS_DIR.glob("*.json")):
-        try:
-            macros[f.stem] = json.loads(f.read_text(encoding="utf-8"))
-        except Exception:
-            pass
-    content = json.dumps(macros, indent=2, ensure_ascii=False)
-    return StreamingResponse(
-        io.BytesIO(content.encode("utf-8")),
-        media_type="application/json",
-        headers={"Content-Disposition": "attachment; filename=macros_backup.json"},
-    )
-
-
-@router.post("/macros/restore", summary="Restore Macros from JSON")
-async def restore_macros_backup_json(
-    file: UploadFile = File(...),
-    overwrite: bool = True,
-    _key: str = Depends(verify_api_key),
-) -> dict:
-    """Restore macro dari JSON file upload."""
-    if not file.filename or not file.filename.endswith(".json"):
-        raise HTTPException(status_code=400, detail="File harus berupa JSON")
-
-    restored: list[str] = []
-    skipped: list[str] = []
-    errors: list[str] = []
-
-    MACROS_DIR.mkdir(parents=True, exist_ok=True)
-
-    try:
-        content = await file.read()
-        data = json.loads(content.decode("utf-8"))
-
-        if not isinstance(data, dict):
-            raise HTTPException(status_code=400, detail="JSON harus berupa object dengan key nama macro")
-
-        for name, macro_data in data.items():
-            if not isinstance(macro_data, dict):
-                errors.append(f"{name}: bukan object")
-                continue
-
-            target = MACROS_DIR / f"{name}.json"
-            if target.exists() and not overwrite:
-                skipped.append(name)
-                continue
-
-            target.write_text(json.dumps(macro_data, indent=2, ensure_ascii=False), encoding="utf-8")
-            restored.append(name)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="File JSON tidak valid")
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Error restore: {exc}")
-
-    return {
-        "success": True,
-        "restored": restored,
-        "skipped": skipped,
-        "errors": errors,
-        "message": f"{len(restored)} macro restored, {len(skipped)} skipped, {len(errors)} error",
-    }
-
 
 # ── System / Setup ────────────────────────────────────────────────────────────
 

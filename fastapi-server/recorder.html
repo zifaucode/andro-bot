@@ -2252,8 +2252,15 @@
       // BACKUP & RESTORE
       // ═══════════════════════════════════════════════════════════
       async function downloadBackup() {
+        const name = document.getElementById("macro-name").value.trim();
+        if (!name) {
+          toast("Simpan macro terlebih dahulu sebelum backup.", "error");
+          return;
+        }
         try {
-          const res = await fetch("/api/macros/backup?web=1");
+          const res = await fetch(
+            "/api/macros/backup?web=1&name=" + encodeURIComponent(name),
+          );
           if (!res.ok) {
             const d = await res.json().catch(() => ({}));
             throw new Error(d.detail || "Download gagal");
@@ -2262,8 +2269,7 @@
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download =
-            "macros_backup_" + new Date().toISOString().slice(0, 10) + ".json";
+          a.download = name + ".json";
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -2282,25 +2288,18 @@
           toast("File harus berupa JSON", "error");
           return;
         }
-        const overwrite = confirm("Timpa macro yang sudah ada jika nama sama?");
         const form = new FormData();
         form.append("file", file);
 
         try {
           toast("Sedang restore backup...", "info");
-          const res = await fetch(
-            "/api/macros/restore?overwrite=" + overwrite + "&web=1",
-            {
-              method: "POST",
-              body: form,
-            },
-          );
+          const res = await fetch("/api/macros/restore?web=1", {
+            method: "POST",
+            body: form,
+          });
           const d = await res.json();
           if (!res.ok) throw new Error(d.detail || "Restore gagal");
-          toast(
-            `Restore selesai! ${d.restored.length} macro restored, ${d.skipped.length} skipped, ${d.errors.length} error`,
-            "success",
-          );
+          toast(d.message || "Restore berhasil!", "success");
         } catch (e) {
           toast("Error restore backup: " + e.message, "error");
         }
