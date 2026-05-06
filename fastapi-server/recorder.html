@@ -1137,7 +1137,7 @@
             class="btn btn-ghost"
             onclick="downloadBackup()"
             style="flex: 0 0 auto"
-            title="Download Backup (ZIP)"
+            title="Download Backup (JSON)"
           >
             <i class="fa-solid fa-download" style="color: var(--cyan)"></i>
           </button>
@@ -1145,14 +1145,14 @@
             class="btn btn-ghost"
             onclick="document.getElementById('restore-file').click()"
             style="flex: 0 0 auto"
-            title="Restore Backup (ZIP)"
+            title="Restore Backup (JSON)"
           >
             <i class="fa-solid fa-upload" style="color: var(--pink)"></i>
           </button>
           <input
             type="file"
             id="restore-file"
-            accept=".zip"
+            accept=".json"
             style="display: none"
             onchange="uploadBackup(this)"
           />
@@ -2253,9 +2253,7 @@
       // ═══════════════════════════════════════════════════════════
       async function downloadBackup() {
         try {
-          const res = await fetch("/api/macros/backup", {
-            headers: { "X-API-Key": await getApiKey() },
-          });
+          const res = await fetch("/api/macros/backup?web=1");
           if (!res.ok) {
             const d = await res.json().catch(() => ({}));
             throw new Error(d.detail || "Download gagal");
@@ -2265,7 +2263,7 @@
           const a = document.createElement("a");
           a.href = url;
           a.download =
-            "macros_backup_" + new Date().toISOString().slice(0, 10) + ".zip";
+            "macros_backup_" + new Date().toISOString().slice(0, 10) + ".json";
           document.body.appendChild(a);
           a.click();
           a.remove();
@@ -2280,8 +2278,8 @@
         const file = input.files[0];
         input.value = "";
         if (!file) return;
-        if (!file.name.endsWith(".zip")) {
-          toast("File harus berupa ZIP", "error");
+        if (!file.name.endsWith(".json")) {
+          toast("File harus berupa JSON", "error");
           return;
         }
         const overwrite = confirm("Timpa macro yang sudah ada jika nama sama?");
@@ -2291,10 +2289,9 @@
         try {
           toast("Sedang restore backup...", "info");
           const res = await fetch(
-            "/api/macros/restore?overwrite=" + overwrite,
+            "/api/macros/restore?overwrite=" + overwrite + "&web=1",
             {
               method: "POST",
-              headers: { "X-API-Key": await getApiKey() },
               body: form,
             },
           );
