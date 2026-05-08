@@ -9,6 +9,7 @@ import threading
 import queue
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import urljoin
 
 import requests
 import dotenv
@@ -70,7 +71,13 @@ def _send_update_status(transaction_id: str, job_status: str) -> dict:
             "X-API-SECRET": api_secret,
         }
 
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        # Manual redirect handling agar POST tidak berubah jadi GET saat redirect (misal http→https)
+        resp = requests.post(url, json=payload, headers=headers, timeout=30, allow_redirects=False)
+        if resp.status_code in (301, 302, 307, 308):
+            location = resp.headers.get("Location", "")
+            if location:
+                redirect_url = urljoin(url, location)
+                resp = requests.post(redirect_url, json=payload, headers=headers, timeout=30)
         resp.raise_for_status()
 
         result = {
