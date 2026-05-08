@@ -223,15 +223,16 @@
             </div>
           </div>
           <div class="col-md-6">
-            <label class="form-label">URL Website Tujuan (Endpoint POST)</label>
+            <label class="form-label">Base URL Website Tujuan</label>
             <input
               type="text"
               class="form-control"
               id="t_TARGET_SERVER_URL"
-              placeholder="https://example.com/api/device/update"
+              placeholder="https://example.com"
             />
             <div class="form-text text-muted small">
-              Endpoint yang menerima POST update URL / data device.
+              Base URL saja (tanpa path). Sistem akan otomatis menambahkan
+              /api/bot/update-url dan /api/bot/update-status.
             </div>
           </div>
           <div class="col-md-6">
