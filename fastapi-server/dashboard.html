@@ -480,6 +480,65 @@
       </div>
     </div>
 
+    <!-- Modal Update Status Log -->
+    <div
+      class="modal fade"
+      id="updateStatusModal"
+      tabindex="-1"
+      data-bs-backdrop="static"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div
+          class="modal-content text-dark"
+          style="
+            background: #f8fafc;
+            border: none;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+          "
+        >
+          <div class="modal-header border-bottom-0 pb-0">
+            <h5 class="modal-title fw-bold">
+              <i class="fa-solid fa-paper-plane text-primary me-2"></i> Update
+              Status Log
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body pt-3">
+            <div class="mb-2">
+              <span class="badge bg-secondary" id="usModalTxnId"></span>
+            </div>
+            <div
+              id="usModalContent"
+              class="bg-light p-3 rounded"
+              style="
+                border: 1px solid #e2e8f0;
+                font-family: monospace;
+                font-size: 13px;
+                max-height: 400px;
+                overflow-y: auto;
+                color: #334155;
+                white-space: pre-wrap;
+              "
+            ></div>
+          </div>
+          <div class="modal-footer border-top-0 pt-0">
+            <button
+              type="button"
+              class="btn btn-outline-secondary btn-sm"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bootstrap Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -560,21 +619,9 @@
             let updateBtn = "";
             if (job.update_status_log) {
               if (job.update_status_log.success) {
-                updateBadge =
-                  '<span class="badge bg-success" title="' +
-                  (job.update_status_log.message || "").replace(
-                    /"/g,
-                    "&quot;",
-                  ) +
-                  '">Sent</span>';
+                updateBadge = `<span class="badge bg-success cursor-pointer" style="cursor:pointer;" onclick="showUpdateStatusLog('${txnId}')" title="Klik untuk lihat log">Sent</span>`;
               } else {
-                updateBadge =
-                  '<span class="badge bg-danger" title="' +
-                  (job.update_status_log.message || "").replace(
-                    /"/g,
-                    "&quot;",
-                  ) +
-                  '">Failed</span>';
+                updateBadge = `<span class="badge bg-danger cursor-pointer" style="cursor:pointer;" onclick="showUpdateStatusLog('${txnId}')" title="Klik untuk lihat log">Failed</span>`;
                 updateBtn = `<button class="btn btn-sm btn-outline-warning ms-1" onclick="sendUpdateStatus('${txnId}')" title="Retry Send"><i class="fa-solid fa-paper-plane"></i></button>`;
               }
             } else if (
@@ -638,6 +685,21 @@
         }
       }
 
+      function showUpdateStatusLog(txnId) {
+        const job = txData[txnId];
+        if (!job || !job.update_status_log) return;
+        document.getElementById("usModalTxnId").textContent = "TXN: " + txnId;
+        document.getElementById("usModalContent").textContent = JSON.stringify(
+          job.update_status_log,
+          null,
+          2,
+        );
+        const modalEl = document.getElementById("updateStatusModal");
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      }
+
       async function sendUpdateStatus(txnId) {
         try {
           const res = await fetch("/api/bot/update-status?web=1", {
@@ -647,10 +709,22 @@
           });
           const d = await res.json();
           if (!res.ok) throw new Error(d.detail || "Gagal kirim update status");
-          alert(`Update status berhasil!\n${d.message || ""}`);
+          document.getElementById("usModalTxnId").textContent = "TXN: " + txnId;
+          document.getElementById("usModalContent").textContent =
+            JSON.stringify(d, null, 2);
+          const modalEl = document.getElementById("updateStatusModal");
+          let modal = bootstrap.Modal.getInstance(modalEl);
+          if (!modal) modal = new bootstrap.Modal(modalEl);
+          modal.show();
           fetchJobs();
         } catch (e) {
-          alert("Error kirim update status: " + e.message);
+          document.getElementById("usModalTxnId").textContent = "TXN: " + txnId;
+          document.getElementById("usModalContent").textContent =
+            "Error: " + e.message;
+          const modalEl = document.getElementById("updateStatusModal");
+          let modal = bootstrap.Modal.getInstance(modalEl);
+          if (!modal) modal = new bootstrap.Modal(modalEl);
+          modal.show();
         }
       }
 

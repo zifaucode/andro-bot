@@ -62,7 +62,7 @@ def _send_update_status(transaction_id: str, job_status: str) -> dict:
         if not target_url or not api_secret:
             return {"success": False, "message": "Target server config belum diatur"}
 
-        url = target_url.rstrip("/") + "/bot/update-status"
+        url = target_url.rstrip("/") + "/api/bot/update-status"
         payload = {"invoice": transaction_id}
         headers = {
             "Content-Type": "application/json",

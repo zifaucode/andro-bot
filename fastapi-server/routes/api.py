@@ -705,7 +705,7 @@ def send_update_status_manual(
     _key: str = Depends(verify_api_key),
 ) -> dict:
     """
-    Kirim invoice ke target server /bot/update-status.
+    Kirim invoice ke target server /api/bot/update-status.
     Body: {"invoice": "TXN-123"}
     """
     invoice = body.get("invoice", "").strip()
@@ -723,7 +723,7 @@ def send_update_status_manual(
     if not api_secret:
         raise HTTPException(status_code=400, detail="API Secret belum diatur. Simpan konfigurasi dulu.")
 
-    url = target_url.rstrip("/") + "/bot/update-status"
+    url = target_url.rstrip("/") + "/api/bot/update-status"
     payload = {"invoice": invoice}
     headers = {
         "Content-Type": "application/json",
