@@ -697,3 +697,57 @@ def update_url_to_target_server(
         )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Gagal mengirim ke target server: {str(exc)}")
+
+
+@router.post("/bot/update-status", summary="Send Update Status to Target Server")
+def send_update_status_manual(
+    body: dict = Body(...),
+    _key: str = Depends(verify_api_key),
+) -> dict:
+    """
+    Kirim invoice ke target server /bot/update-status.
+    Body: {"invoice": "TXN-123"}
+    """
+    invoice = body.get("invoice", "").strip()
+    if not invoice:
+        raise HTTPException(status_code=400, detail="Field 'invoice' wajib diisi.")
+
+    worker_env = Path(settings.BOT_WORKER_PATH).parent / ".env"
+    values = dotenv.dotenv_values(worker_env)
+
+    target_url = values.get("TARGET_SERVER_URL", "").strip()
+    api_secret = values.get("TARGET_API_SECRET", "").strip()
+
+    if not target_url:
+        raise HTTPException(status_code=400, detail="Target server URL belum diatur. Simpan konfigurasi dulu.")
+    if not api_secret:
+        raise HTTPException(status_code=400, detail="API Secret belum diatur. Simpan konfigurasi dulu.")
+
+    url = target_url.rstrip("/") + "/bot/update-status"
+    payload = {"invoice": invoice}
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-API-SECRET": api_secret,
+    }
+
+    try:
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+        return {
+            "success": True,
+            "message": f"Update status berhasil dikirim ({resp.status_code}).",
+            "target_response": resp.text,
+            "status_code": resp.status_code,
+        }
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Request ke target server timeout.")
+    except requests.exceptions.ConnectionError:
+        raise HTTPException(status_code=502, detail="Tidak bisa terkoneksi ke target server.")
+    except requests.exceptions.HTTPError as exc:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Target server merespons error: HTTP {exc.response.status_code} - {exc.response.text}"
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Gagal mengirim ke target server: {str(exc)}")

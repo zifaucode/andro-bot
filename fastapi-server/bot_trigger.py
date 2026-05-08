@@ -10,6 +10,9 @@ import queue
 from datetime import datetime
 from pathlib import Path
 
+import requests
+import dotenv
+
 from config import settings
 
 _lock = threading.Lock()
@@ -45,6 +48,58 @@ def _update_status(transaction_id: str, status: str, detail: str = "", extra: di
             store[transaction_id].update(extra)
 
         _save_store(store)
+
+
+def _send_update_status(transaction_id: str, job_status: str) -> dict:
+    """Kirim invoice ke target server /bot/update-status."""
+    try:
+        worker_env = Path(settings.BOT_WORKER_PATH).parent / ".env"
+        values = dotenv.dotenv_values(worker_env)
+
+        target_url = values.get("TARGET_SERVER_URL", "").strip()
+        api_secret = values.get("TARGET_API_SECRET", "").strip()
+
+        if not target_url or not api_secret:
+            return {"success": False, "message": "Target server config belum diatur"}
+
+        url = target_url.rstrip("/") + "/bot/update-status"
+        payload = {"invoice": transaction_id}
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-API-SECRET": api_secret,
+        }
+
+        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        resp.raise_for_status()
+
+        result = {
+            "success": True,
+            "message": f"Update status berhasil ({resp.status_code})",
+            "target_response": resp.text,
+            "status_code": resp.status_code,
+        }
+    except requests.exceptions.Timeout:
+        result = {"success": False, "message": "Timeout saat kirim update status"}
+    except requests.exceptions.ConnectionError:
+        result = {"success": False, "message": "Tidak bisa terkoneksi ke target server"}
+    except requests.exceptions.HTTPError as exc:
+        result = {
+            "success": False,
+            "message": f"Target error HTTP {exc.response.status_code}: {exc.response.text}",
+        }
+    except Exception as exc:
+        result = {"success": False, "message": f"Exception: {exc}"}
+
+    with _lock:
+        store = _load_store()
+        if transaction_id not in store:
+            store[transaction_id] = {}
+        store[transaction_id]["update_status_log"] = result
+        store[transaction_id]["update_status_sent_at"] = datetime.now().isoformat()
+        _save_store(store)
+
+    return result
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
@@ -111,6 +166,7 @@ def _queue_worker() -> None:
         ]
 
         _update_status(transaction_id, "running", "Worker started")
+        final_status = "error"
         try:
             result = subprocess.run(
                 cmd,
@@ -119,17 +175,23 @@ def _queue_worker() -> None:
                 timeout=getattr(settings, 'TASK_TIMEOUT', 300),
             )
             if result.returncode == 0:
+                final_status = "done"
                 _update_status(transaction_id, "done", result.stdout.strip()[-2000:])
             elif result.returncode == 2:
+                final_status = "failed"
                 _update_status(transaction_id, "failed", result.stdout.strip()[-2000:] or "Macro aborted")
             else:
+                final_status = "error"
                 stderr_detail = result.stderr.strip() or result.stdout.strip()
                 _update_status(transaction_id, "error", stderr_detail[-2000:] or "Worker error")
         except subprocess.TimeoutExpired:
+            final_status = "timeout"
             _update_status(transaction_id, "timeout", f"Worker exceeded {getattr(settings, 'TASK_TIMEOUT', 300)}s time limit")
         except Exception as exc:
+            final_status = "error"
             _update_status(transaction_id, "error", f"Exception: {exc}")
         finally:
+            _send_update_status(transaction_id, final_status)
             _job_queue.task_done()
 
 
