@@ -19,44 +19,120 @@ echo ""
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# ─── Termux User Repository (TUR) Index ─────────────────────────
+# Menyediakan pre-built wheels untuk library Python yang sulit
+# di-compile di Termux (pydantic-core, dll).
+TUR_INDEX="https://termux-user-repository.github.io/pypi/"
+
 # ─── 0. Mencegah Android Sleep ──────────────────────────────────
-echo "[0/6] Mengaktifkan Termux Wake-Lock (Agar jalan di background)..."
+echo "[0/7] Mengaktifkan Termux Wake-Lock (Agar jalan di background)..."
 termux-wake-lock
 
 # ─── 1. Update package list ─────────────────────────────────────
-echo "[1/6] Update & upgrade packages Termux..."
+echo "[1/7] Update & upgrade packages Termux..."
 pkg update -y && pkg upgrade -y
 
 # ─── 2. Install dependencies system ─────────────────────────────
 echo ""
-echo "[2/6] Install dependencies sistem Android (Python, Git, ADB, Wget)..."
-# Ditambahkan clang make binutils karena terkadang instalasi library python butuh dicompile di Termux
-pkg install -y python git android-tools wget clang make binutils proot resolv-conf
+echo "[2/7] Install dependencies sistem Android (Python, Git, ADB, dll)..."
+# clang, make, binutils      → dibutuhkan untuk compile library Python (fallback)
+# libffi, openssl             → dibutuhkan oleh beberapa library (cryptography, dll)
+# rust                        → dibutuhkan oleh pydantic-core jika TUR gagal
+# proot, resolv-conf          → jaringan & kompatibilitas
+pkg install -y \
+    python \
+    git \
+    android-tools \
+    wget \
+    clang \
+    make \
+    binutils \
+    proot \
+    resolv-conf \
+    libffi \
+    openssl \
+    rust
 
-# ─── 3. Install Python dependencies ─────────────────────────────
+# ─── 3. Upgrade pip & setuptools ────────────────────────────────
 echo ""
-echo "[3/6] Install library dependencies Python..."
+echo "[3/7] Menyiapkan pip & build tools..."
+python -m ensurepip --upgrade 2>/dev/null || true
+pip install --upgrade pip setuptools wheel 2>/dev/null || true
 
-echo "    > [1/5] Menyiapkan pip (Package Manager)..."
-# Termux melarang `pip install --upgrade pip`, jadi kita skip langkah upgrade
-python -m ensurepip --upgrade || true
+# ─── 4. Install Python dependencies ─────────────────────────────
+echo ""
+echo "[4/7] Install library dependencies Python..."
 
-echo "    > [2/5] Menginstall requests (Digunakan untuk menembak API)..."
+# --- 4a. Install pydantic-core terlebih dahulu dari TUR ----------
+# pydantic-core ditulis dalam Rust dan TIDAK tersedia sebagai
+# pre-built wheel di PyPI untuk Android/Termux.
+# TUR menyediakan wheel yang sudah di-compile untuk aarch64/arm.
+echo "    > [1/6] Menginstall pydantic-core dari Termux User Repository..."
+echo "    ⏳ Menggunakan pre-built wheel dari TUR (lebih cepat & stabil)..."
+if pip install --extra-index-url "$TUR_INDEX" pydantic-core; then
+    echo "    ✅ pydantic-core berhasil diinstall dari TUR"
+else
+    echo "    ⚠️  TUR gagal, mencoba fallback compile dari source..."
+    echo "    ⏳ Ini akan memakan waktu lama, mohon ditunggu..."
+    CARGO_BUILD_TARGET="" pip install pydantic-core --no-binary :none: || {
+        echo ""
+        echo "    ❌ GAGAL install pydantic-core!"
+        echo "    Coba jalankan manual:"
+        echo "      pip install --extra-index-url $TUR_INDEX pydantic-core"
+        echo ""
+        exit 1
+    }
+fi
+
+# --- 4b. Install pydantic ----------------------------------------
+echo "    > [2/6] Menginstall pydantic..."
+pip install pydantic
+
+# --- 4c. Install requests ----------------------------------------
+echo "    > [3/6] Menginstall requests (Digunakan untuk menembak API)..."
 pip install requests
 
-echo "    > [3/5] Menginstall python-dotenv (Digunakan untuk membaca konfigurasi .env)..."
+# --- 4d. Install python-dotenv ------------------------------------
+echo "    > [4/6] Menginstall python-dotenv (Digunakan untuk membaca konfigurasi .env)..."
 pip install python-dotenv
 
-echo "    > [4/5] Menginstall uvicorn (Digunakan untuk server web aplikasi)..."
+# --- 4e. Install uvicorn -----------------------------------------
+echo "    > [5/6] Menginstall uvicorn (Digunakan untuk server web aplikasi)..."
 pip install uvicorn
 
-echo "    > [5/5] Menginstall fastapi & python-multipart (Digunakan untuk arsitektur API Bot)..."
-echo "    ⏳ PENTING: Proses instalasi FastAPI biasanya memakan waktu agak lama karena kompilasi 'pydantic'. Jangan ditutup, mohon ditunggu..."
+# --- 4f. Install fastapi & python-multipart -----------------------
+echo "    > [6/6] Menginstall fastapi & python-multipart (Arsitektur API Bot)..."
 pip install fastapi python-multipart
 
-# ─── 4. Install Cloudflared ─────────────────────────────────────
+# ─── 5. Verifikasi instalasi Python ─────────────────────────────
 echo ""
-echo "[4/6] Install cloudflared (Cloudflare Quick Tunnel)..."
+echo "[5/7] Verifikasi instalasi Python..."
+
+VERIFY_FAILED=0
+for pkg_name in fastapi uvicorn pydantic requests dotenv; do
+    MOD_NAME="$pkg_name"
+    # python-dotenv diimport sebagai 'dotenv'
+    if [ "$pkg_name" = "dotenv" ]; then
+        MOD_NAME="dotenv"
+    fi
+    if python -c "import $MOD_NAME" 2>/dev/null; then
+        echo "    ✅ $pkg_name OK"
+    else
+        echo "    ❌ $pkg_name GAGAL diimport!"
+        VERIFY_FAILED=1
+    fi
+done
+
+if [ "$VERIFY_FAILED" -eq 1 ]; then
+    echo ""
+    echo "    ⚠️  Beberapa library gagal diinstall."
+    echo "    Coba jalankan ulang: bash setup_termux.sh"
+    echo "    Atau install manual: pip install --extra-index-url $TUR_INDEX <nama-library>"
+fi
+
+# ─── 6. Install Cloudflared ─────────────────────────────────────
+echo ""
+echo "[6/7] Install cloudflared (Cloudflare Quick Tunnel)..."
 
 # Deteksi arsitektur
 ARCH=$(uname -m)
@@ -79,9 +155,9 @@ chmod +x "$PREFIX/bin/cloudflared"
 CLOUDFLARED_VERSION=$(cloudflared --version 2>&1 | head -1)
 echo "    ✅ $CLOUDFLARED_VERSION"
 
-# ─── 5. Buat file .env dari .env.example ────────────────────────
+# ─── 7. Setup konfigurasi & folder ──────────────────────────────
 echo ""
-echo "[5/6] Membuat file .env..."
+echo "[7/7] Membuat file .env & folder yang diperlukan..."
 
 # Bot worker .env
 WORKER_ENV="$SCRIPT_DIR/bot-worker/.env"
@@ -106,9 +182,7 @@ else
     echo "    ℹ️  $FASTAPI_ENV sudah ada, tidak ditimpa"
 fi
 
-# ─── 6. Buat folder yang diperlukan ─────────────────────────────
-echo ""
-echo "[6/6] Membuat folder output & logs..."
+# Buat folder output & logs
 mkdir -p "$SCRIPT_DIR/bot-worker/output"
 mkdir -p "$SCRIPT_DIR/fastapi-server"
 mkdir -p "$SCRIPT_DIR/logs"
